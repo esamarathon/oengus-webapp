@@ -19,7 +19,7 @@ $googleWhite: #000000;
   background-color: $warning !important;
 }
 
-@import 'bulma';
+@import 'bulma/bulma';
 @import 'bulmaswatch/solar/overrides';
 @import '@duncte123/bulma-tagsinput/src/sass/index';
 @import './elements';
@@ -27,6 +27,7 @@ $googleWhite: #000000;
 @import 'bulma-extensions/dist/css/bulma-extensions.min.css';
 @import 'bulma-extensions/bulma-tooltip/src/sass/index';
 @import 'node_modules/@wizishop/ng-wizi-bulma/ng-wizi-bulma';
-@import "@busacca/ng-pick-datetime/assets/style/picker.min.css";
+// Manually copied in the file, it was not exported
+@import "./assets/themes/ng-pick-datetime-picker.min.css";
 @import "flag-icon-css/css/flag-icon.min.css";
 @import "vis-timeline/dist/vis-timeline-graph2d.min.css";

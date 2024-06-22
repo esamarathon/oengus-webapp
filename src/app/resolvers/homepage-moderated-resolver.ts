@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MarathonService } from '../../services/marathon.service';
 import { Marathon } from '../../model/marathon';
 import { UserService } from '../../services/user.service';
 
 @Injectable()
-export class HomepageModeratedResolver implements Resolve<Marathon[]> {
+export class HomepageModeratedResolver  {
 
   constructor(private marathonService: MarathonService, private userService: UserService) {
   }

@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { SubmissionService } from '../../services/submission.service';
 import {SubmissionPage} from '../../model/submission-page';
 
 @Injectable()
-export class SubmissionsResolver implements Resolve<SubmissionPage> {
+export class SubmissionsResolver  {
 
   constructor(private submissionService: SubmissionService) {
   }

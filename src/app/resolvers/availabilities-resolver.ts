@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { SubmissionService } from '../../services/submission.service';
 
 @Injectable()
-export class AvailabilitiesResolver implements Resolve<any> {
+export class AvailabilitiesResolver  {
 
   constructor(private submissionService: SubmissionService) {
   }

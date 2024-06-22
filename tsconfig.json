@@ -4,6 +4,7 @@
     "skipLibCheck": true,
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
+    "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,
     "module": "esNext",
@@ -11,13 +12,14 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es6",
+    "target": "ES2022",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
       "ES2020",
       "dom"
-    ]
+    ],
+    "useDefineForClassFields": false
   },
 }

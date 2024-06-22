@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Page } from '../../model/page';
 import { Donation } from '../../model/donation';
 import { DonationService } from '../../services/donation.service';
 
 @Injectable()
-export class DonationsResolver implements Resolve<Page<Donation>> {
+export class DonationsResolver  {
 
   constructor(private donationService: DonationService) {
   }

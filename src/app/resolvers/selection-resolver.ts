@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { firstValueFrom, Observable } from 'rxjs';
 import { SelectionService } from '../../services/selection.service';
 import { Selection } from '../../model/selection';
 
 @Injectable()
-export class SelectionResolver implements Resolve<Map<number, Selection>> {
+export class SelectionResolver  {
 
   constructor(private selectionService: SelectionService) {
   }

@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { inject, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MarathonComponent } from './marathon.component';
 import { HomeComponent } from './home/home.component';
@@ -99,7 +99,7 @@ const marathonRoutes: Routes = [
       {
         path: 'settings',
         component: SettingsComponent,
-        canActivate: [CanActivateMarathonSettingsGuard]
+        canActivate: [(route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state)]
       },
       {
         path: 'submit',
@@ -107,7 +107,10 @@ const marathonRoutes: Routes = [
         resolve: {
           submission: SubmissionResolver
         },
-        canActivate: [CanActivateMarathonSubmitGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSubmitGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'submissions',
@@ -127,7 +130,10 @@ const marathonRoutes: Routes = [
           statuses: [],
           isAdminRoute: true,
         },
-        canActivate: [CanActivateMarathonSettingsGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'schedule',
@@ -149,7 +155,10 @@ const marathonRoutes: Routes = [
           withCustomData: true,
           isAdminRoute: true,
         },
-        canActivate: [CanActivateMarathonSettingsGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'schedule/:slug',
@@ -167,7 +176,10 @@ const marathonRoutes: Routes = [
         data: {
           //
         },
-        canActivate: [CanActivateMarathonSettingsGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'schedule-management/new',
@@ -178,7 +190,10 @@ const marathonRoutes: Routes = [
         data: {
           //
         },
-        canActivate: [CanActivateMarathonSettingsGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'schedule-management/:scheduleId',
@@ -189,7 +204,10 @@ const marathonRoutes: Routes = [
         data: {
           withCustomData: true,
         },
-        canActivate: [CanActivateMarathonSettingsGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'incentives',
@@ -201,7 +219,10 @@ const marathonRoutes: Routes = [
           withLocked: true,
           withUnapproved: false
         },
-        canActivate: [CanActivateMarathonIncentivesGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonIncentivesGuard).canActivate(route, state)
+
+        ]
       },
       {
         path: 'incentives/manage',
@@ -214,7 +235,11 @@ const marathonRoutes: Routes = [
           withLocked: true,
           withUnapproved: true
         },
-        canActivate: [CanActivateMarathonSettingsGuard, CanActivateMarathonIncentivesGuard, CanActivateMarathonActiveGuard]
+        canActivate: [
+          (route, state) => inject(CanActivateMarathonSettingsGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonIncentivesGuard).canActivate(route, state),
+          (route, state) => inject(CanActivateMarathonActiveGuard).canActivate(route, state)
+        ]
       },
       {
         path: 'donate',

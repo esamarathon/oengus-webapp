@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { IncentiveService } from '../../services/incentive.service';
 import { Incentive } from '../../model/incentive';
 
 @Injectable()
-export class IncentivesResolver implements Resolve<Incentive[]> {
+export class IncentivesResolver  {
 
   constructor(private incentiveService: IncentiveService) {
   }

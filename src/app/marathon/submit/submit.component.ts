@@ -58,7 +58,7 @@ export class SubmitComponent implements OnInit {
               private http: HttpClient,
               private location: Location,
               private router: Router) {
-    if (this.route.snapshot.data.submission && this.route.snapshot.data.submission !== {}) {
+    if (this.route.snapshot.data.submission) {
       this.initSubmission(this.route.snapshot.data.submission);
     } else {
       this.initSubmission(new Submission());

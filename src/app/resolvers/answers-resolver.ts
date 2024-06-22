@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { SubmissionService } from '../../services/submission.service';
 import { Answer } from '../../model/answer';
 import { UserService } from '../../services/user.service';
 
 @Injectable()
-export class AnswersResolver implements Resolve<Answer[]> {
+export class AnswersResolver  {
 
   constructor(private submissionService: SubmissionService, private userService: UserService) {
   }

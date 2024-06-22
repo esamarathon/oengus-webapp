@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { firstValueFrom, forkJoin, Observable, of } from 'rxjs';
 import { MarathonService } from '../../services/marathon.service';
@@ -10,7 +10,7 @@ import { catchError, map } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root'
 })
-export class CanActivateMarathonSubmitGuard implements CanActivate {
+export class CanActivateMarathonSubmitGuard  {
 
   constructor(private userService: UserService,
               private marathonService: MarathonService,

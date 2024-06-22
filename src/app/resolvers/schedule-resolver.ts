@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ScheduleService } from '../../services/schedule.service';
 import { Schedule, V2Schedule } from '../../model/schedule';
@@ -9,7 +9,7 @@ import { RunType, ScheduleLine, V2ScheduleLine } from '../../model/schedule-line
  * @deprecated api has changed!
  */
 @Injectable()
-export class ScheduleResolver implements Resolve<V2Schedule> {
+export class ScheduleResolver  {
 
   constructor(private scheduleService: ScheduleService) {
   }

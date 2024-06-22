@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { ErrorHandler, NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { httpInterceptorProviders } from '../interceptors';
 import { FormsModule } from '@angular/forms';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from '@busacca/ng-pick-datetime';
@@ -79,7 +79,9 @@ const appRoutes: Routes = [
   {
     path: 'login/:service',
     component: LoginOauthComponent,
-    data: { skipRouteLocalization: true },
+    data: {
+      skipRouteLocalization: true,
+    },
   },
   {
     path: '',
@@ -159,6 +161,12 @@ const appRoutes: Routes = [
     ForgotPasswordComponent,
     LoginOauthComponent,
   ],
+  exports: [
+    //
+  ],
+  bootstrap: [
+    AppComponent,
+  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -176,13 +184,11 @@ const appRoutes: Routes = [
       defaultLangFunction: (languages: string[], cachedLang?: string, browserLang?: string) => cachedLang || browserLang || 'en-GB',
       parser: {
         provide: LocalizeParser,
-        useFactory: (translate, location, settings) =>
-          new ManualParserLoader(translate, location, settings, availableLocaleNames, 'YOUR_PREFIX'),
-        deps: [TranslateService, Location, LocalizeRouterSettings]
-      }
+        useFactory: (translate, location, settings) => new ManualParserLoader(translate, location, settings, availableLocaleNames, 'YOUR_PREFIX'),
+        deps: [TranslateService, Location, LocalizeRouterSettings],
+      },
       // initialNavigation: true,
     }),
-    HttpClientModule,
     FormsModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
@@ -198,9 +204,6 @@ const appRoutes: Routes = [
     ElementModule,
     ComponentsModule,
   ],
-  exports: [
-    //
-  ],
   providers: [
     {
       provide: ErrorHandler,
@@ -212,9 +215,7 @@ const appRoutes: Routes = [
     HomepageMetadataResolver,
     HomepageModeratedResolver,
     PatronsResolver,
-  ],
-  bootstrap: [
-    AppComponent,
+    provideHttpClient(withInterceptorsFromDi()),
   ],
 })
 export class AppModule {

@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { DonationService } from '../../services/donation.service';
 import { DonationStats } from '../../model/donation-stats';
 
 @Injectable()
-export class DonationsStatsResolver implements Resolve<DonationStats> {
+export class DonationsStatsResolver  {
 
   constructor(private donationService: DonationService) {
   }
