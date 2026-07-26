@@ -58,7 +58,7 @@
     <tbody>
       @for (donation of donations.content; track donation) {
         <tr>
-          <td>{{ formatDate(donation.date) }}</td>
+          <td><app-element-temporal-datetime [dateTime]="donation.date" format="shortDateTime"></app-element-temporal-datetime></td>
           <td>{{donation.nickname}}</td>
           <td>
             <app-monetary-amount [amount]="donation.amount"

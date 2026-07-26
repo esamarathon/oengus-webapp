@@ -10,7 +10,7 @@ export class Donation {
   zipcode = '';
   city = '';
   country = '';
-  date: Date =  new Date();
+  date = '';
   amount = -1;
   comment = '';
   answers: DonationExtraData[];

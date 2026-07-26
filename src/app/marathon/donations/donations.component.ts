@@ -10,6 +10,7 @@ import { DonationStats } from '../../../model/donation-stats';
 import { UserService } from '../../../services/user.service';
 import { OengusCommonModule } from '../../oengus-common/oengus-common.module';
 import { OengusMdComponent } from '../../components/oengus-md/oengus-md.component';
+import { ElementTemporalDatetimeComponent } from '../../elements/temporal/element-temporal-datetime/element-temporal-datetime.component';
 
 @Component({
     selector: 'app-donations',
@@ -21,6 +22,7 @@ import { OengusMdComponent } from '../../components/oengus-md/oengus-md.componen
         TranslateModule,
         OengusCommonModule,
         OengusMdComponent,
+        ElementTemporalDatetimeComponent,
     ]
 })
 export class DonationsComponent {
@@ -49,9 +51,5 @@ export class DonationsComponent {
 
   exportToCsv() {
     this.donationService.exportAllForMarathon(this.marathonService.marathon.id);
-  }
-
-  formatDate(date: string | Date): string {
-    return new Date(date).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
   }
 }
