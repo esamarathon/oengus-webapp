@@ -50,4 +50,8 @@ export class DonationsComponent {
   exportToCsv() {
     this.donationService.exportAllForMarathon(this.marathonService.marathon.id);
   }
+
+  formatDate(date: string | Date): string {
+    return new Date(date).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+  }
 }
