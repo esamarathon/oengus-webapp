@@ -50,7 +50,7 @@ export class SelectionComponent implements OnInit {
   public faCalendarTimes = faCalendarTimes;
 
   // @ts-expect-error meh.
-  @ViewChild('timeline', {static: false}) timeline: ElementRef;
+  @ViewChild('timeline', { static: false }) timeline: ElementRef;
   public availabilitiesGroups: DataSetDataGroup;
   public availabilitiesItems: DataSetDataItem;
 
@@ -100,7 +100,7 @@ export class SelectionComponent implements OnInit {
     // Somehow this delay solves the availabilities not showing.
     await new Promise((resolve) => window.requestAnimationFrame(resolve));
 
-    const oneHour = Temporal.Duration.from({hours: 1});
+    const oneHour = Temporal.Duration.from({ hours: 1 });
     const timelineEl = document.getElementById('timeline');
 
     if (!timelineEl) {
@@ -159,7 +159,7 @@ export class SelectionComponent implements OnInit {
   }
 
   getTotalTime() {
-    let duration = Temporal.Duration.from({seconds: 0});
+    let duration = Temporal.Duration.from({ seconds: 0 });
     this.submissions.forEach(submission => {
       submission.games.forEach(game => {
         game.categories.forEach(category => {
@@ -177,7 +177,7 @@ export class SelectionComponent implements OnInit {
       return '0:00:00';
     }
 
-    let duration = Temporal.Duration.from({seconds: 0});
+    let duration = Temporal.Duration.from({ seconds: 0 });
     this.submissions.forEach(submission => {
       submission.games.forEach(game => {
         game.categories.forEach(category => {
@@ -186,7 +186,12 @@ export class SelectionComponent implements OnInit {
       });
     });
 
-    const averageDuration = Temporal.Duration.from({milliseconds: duration.total('milliseconds') / numberOfRuns});
+    const avgMs = Math.ceil(duration.total('milliseconds') / numberOfRuns);
+    const averageDuration = Temporal.Duration.from({ milliseconds: avgMs }).round({
+      largestUnit: 'hours',
+      smallestUnit: 'seconds',
+    });
+
     return DurationService.toHuman(averageDuration);
   }
 
@@ -204,7 +209,7 @@ export class SelectionComponent implements OnInit {
   }
 
   getValidatedRunsTime() {
-    let duration = Temporal.Duration.from({seconds: 0});
+    let duration = Temporal.Duration.from({ seconds: 0 });
     this.submissions.forEach(submission => {
       submission.games.forEach(game => {
         game.categories.forEach(category => {
@@ -274,14 +279,14 @@ export class SelectionComponent implements OnInit {
 
   removeAvailabilitiesForRunner(username: string) {
     this.availabilitiesGroups.remove(username);
-    this.availabilitiesItems.remove(this.availabilitiesItems.getIds({filter: (item) => item.group === username}));
+    this.availabilitiesItems.remove(this.availabilitiesItems.getIds({ filter: (item) => item.group === username }));
     this.availabilitiesSelected.splice(this.availabilitiesSelected.findIndex(name => name === username), 1);
   }
 
   clearAvailabilities() {
     this.availabilitiesSelected.forEach(username => {
       this.availabilitiesGroups.remove(username);
-      this.availabilitiesItems.remove(this.availabilitiesItems.getIds({filter: (item) => item.group === username}));
+      this.availabilitiesItems.remove(this.availabilitiesItems.getIds({ filter: (item) => item.group === username }));
     });
     this.availabilitiesSelected = [];
   }
