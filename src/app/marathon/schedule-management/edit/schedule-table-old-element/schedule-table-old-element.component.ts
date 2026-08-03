@@ -72,6 +72,12 @@ export class ScheduleTableOldElementComponent implements OnChanges {
   private lineAvailability = new Map<V2ScheduleLine, boolean>();
   private runnerAvailability = new Map<LineRunner, boolean>();
 
+  // Stable identity keys for `@for` tracking. Saved lines track by their id;
+  // unsaved lines (id === -1) get a stable client-side key so reordering /
+  // array reassignment does not needlessly recreate their DOM rows.
+  private lineKeys = new WeakMap<V2ScheduleLine, string>();
+  private nextLineKey = 0;
+
   iconBars = faBars;
   iconTimes = faTimes;
   iconEdit = faEdit;
@@ -99,6 +105,21 @@ export class ScheduleTableOldElementComponent implements OnChanges {
 
   isRunnerAvailable(runner: LineRunner): boolean {
     return this.runnerAvailability.get(runner) ?? true;
+  }
+
+  trackLine(line: V2ScheduleLine): number | string {
+    if (line.id !== -1) {
+      return line.id;
+    }
+
+    let key = this.lineKeys.get(line);
+
+    if (!key) {
+      key = `new-${this.nextLineKey++}`;
+      this.lineKeys.set(line, key);
+    }
+
+    return key;
   }
 
   private recomputeAvailabilities(): void {

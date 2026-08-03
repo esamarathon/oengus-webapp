@@ -145,8 +145,6 @@ export class EditComponent implements OnInit, OnDestroy {
 
     const oneHour = Temporal.Duration.from({hours: 1});
 
-    console.log(this.marathonService.marathon.startDate);
-
     const timelineEl = document.getElementById('timeline');
 
     if (!timelineEl) {

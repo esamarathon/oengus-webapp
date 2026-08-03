@@ -40,7 +40,7 @@
       </tr>
     }
 
-    @for (line of lines; track line; let i = $index) {
+    @for (line of lines; track trackLine(line); let i = $index) {
       @if (shouldShowDay(i)) {
         <tr>
           <td colspan="10" class="day is-info">
