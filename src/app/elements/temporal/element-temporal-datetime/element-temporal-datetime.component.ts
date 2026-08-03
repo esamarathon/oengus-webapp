@@ -7,18 +7,43 @@ import { dateTimeFormatKey } from '../../../../services/termporal/config';
     selector: 'app-element-temporal-datetime',
     templateUrl: './element-temporal-datetime.component.html',
     styleUrls: ['./element-temporal-datetime.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
     ]
 })
 export class ElementTemporalDatetimeComponent {
-  temporal = inject(TemporalServiceService);
+  private temporal = inject(TemporalServiceService);
 
-  @Input() dateTime: string | Temporal.ZonedDateTime = this.temporal.now;
-  @Input() format: dateTimeFormatKey = 'mediumDateTime';
+  private _dateTime: string | Temporal.ZonedDateTime = this.temporal.now;
+  private _format: dateTimeFormatKey = 'mediumDateTime';
 
-  get date(): Temporal.ZonedDateTime {
-    return this.temporal.parseDate(this.dateTime);
+  // Formatted output is cached and only recomputed when an input changes,
+  // instead of parsing + formatting on every change-detection cycle.
+  protected formatted = '';
+
+  @Input()
+  public set dateTime(value: string | Temporal.ZonedDateTime) {
+    this._dateTime = value;
+    this.updateFormatted();
+  }
+
+  public get dateTime(): string | Temporal.ZonedDateTime {
+    return this._dateTime;
+  }
+
+  @Input()
+  public set format(value: dateTimeFormatKey) {
+    this._format = value;
+    this.updateFormatted();
+  }
+
+  public get format(): dateTimeFormatKey {
+    return this._format;
+  }
+
+  private updateFormatted(): void {
+    const date = this.temporal.parseDate(this._dateTime);
+    this.formatted = this.temporal.format.format(date, this._format);
   }
 }

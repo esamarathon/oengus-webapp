@@ -6,7 +6,7 @@ import { MarkdownService } from '../../../services/markdown.service';
     selector: 'app-simple-md',
     templateUrl: './simple-md.component.html',
     styleUrls: ['./simple-md.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
     ]
@@ -14,14 +14,19 @@ import { MarkdownService } from '../../../services/markdown.service';
 export class SimpleMdComponent {
   private readonly markdown = inject(MarkdownService);
 
-  @Input() public data = '';
+  private _data = '';
+  // Rendered markdown is cached and only recomputed when `data` changes,
+  // instead of being re-rendered on every change-detection cycle.
+  protected markdownText = '';
 
-  get markdownText(): string {
-    if (!this.data) {
-      return '';
-    }
+  @Input()
+  public set data(value: string) {
+    this._data = value ?? '';
+    this.markdownText = this._data ? this.markdown.renderInlineSimple(this._data) : '';
+  }
 
-    return this.markdown.renderInlineSimple(this.data);
+  public get data(): string {
+    return this._data;
   }
 
 }
