@@ -7,7 +7,7 @@ import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
     selector: 'app-element-table-cell',
     templateUrl: './element-table-cell.component.html',
     styleUrls: ['./element-table-cell.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         FontAwesomeModule,

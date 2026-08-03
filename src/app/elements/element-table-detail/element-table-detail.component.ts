@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
     selector: 'app-element-table-detail',
     templateUrl: './element-table-detail.component.html',
     styleUrls: ['./element-table-detail.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
     ]

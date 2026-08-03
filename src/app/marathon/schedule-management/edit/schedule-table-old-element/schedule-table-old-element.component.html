@@ -62,7 +62,7 @@
           ></app-element-table-cell>
         </td>
       <td [class]="{
-        'is-warning': !matchesAvailabilities(line)
+        'is-warning': !isLineAvailable(line)
       }">
           <app-element-temporal-datetime [dateTime]="line.date" format="shortTime"></app-element-temporal-datetime>
         </td>
@@ -80,7 +80,7 @@
           <td>
             @for (runner of line.runners; track runner) {
 <p [class]="{
-          'has-text-warning': !isAvailable(line, runner)
+          'has-text-warning': !isRunnerAvailable(runner)
         }">
                 @if (selectedAvailabilities.includes(getRunnerUsername(runner))) {
 <a (click)="selectAvailability.emit({

@@ -9,7 +9,7 @@ import { DurationService } from '../../../../../../services/duration.service';
     selector: 'app-setup-block-editor',
     templateUrl: './setup-block-editor.component.html',
     styleUrls: ['./setup-block-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         FormsModule,

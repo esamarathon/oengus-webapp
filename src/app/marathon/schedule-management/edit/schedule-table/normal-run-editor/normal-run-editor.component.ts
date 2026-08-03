@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,7 +20,7 @@ type UserSearchType = { username: string; profile: null; isCustom: true} |  { us
     selector: 'app-normal-run-editor',
     templateUrl: './normal-run-editor.component.html',
     styleUrls: ['./normal-run-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         FormsModule,
@@ -32,6 +32,7 @@ type UserSearchType = { username: string; profile: null; isCustom: true} |  { us
 })
 export class NormalRunEditorComponent implements OnInit {
   private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
 
   iconTimes = faTimes;
   userSearch: Record<string, UserSearchType[]> = {};
@@ -124,6 +125,9 @@ export class NormalRunEditorComponent implements OnInit {
       });
 
       this.userSearch[position] = combinedItems;
+      // OnPush: the autocomplete `[data]` binding won't refresh from an async
+      // subscription without an explicit mark-for-check.
+      this.cdr.markForCheck();
     });
   }
 }

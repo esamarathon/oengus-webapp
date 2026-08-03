@@ -473,6 +473,10 @@ export class EditComponent implements OnInit, OnDestroy {
         this.timebar,
       );
     }
+
+    // Reassign the array reference (keeping the same line objects) so child
+    // tables notice the change and recompute derived state (e.g. availability).
+    this.lines = [...this.lines];
   }
 
   moveToSchedule(index: number): void {
@@ -494,6 +498,8 @@ export class EditComponent implements OnInit, OnDestroy {
 
     if (run) {
       this.lines.splice(index, 1);
+      // Reassign so child tables notice the removal and recompute derived state.
+      this.lines = [...this.lines];
     }
   }
 

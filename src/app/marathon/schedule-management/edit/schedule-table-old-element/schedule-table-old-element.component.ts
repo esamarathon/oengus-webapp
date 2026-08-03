@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, ChangeDetectionStrategy, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -28,7 +28,7 @@ import { IdType } from 'vis-timeline/esnext';
     selector: 'app-schedule-table-old-element',
     templateUrl: './schedule-table-old-element.component.html',
     styleUrls: ['./schedule-table-old-element.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         FormsModule,
@@ -44,8 +44,9 @@ import { IdType } from 'vis-timeline/esnext';
         NormalRunEditorComponent,
     ]
 })
-export class ScheduleTableOldElementComponent {
+export class ScheduleTableOldElementComponent implements OnChanges {
   private temporalService = inject(TemporalServiceService);
+  private cdr = inject(ChangeDetectorRef);
 
   public getRowParity = getRowParity;
   getRunnerUsername = getRunnerUsername;
@@ -65,6 +66,12 @@ export class ScheduleTableOldElementComponent {
   expanded = new Set<number>();
   estimateChangedDebounce = debounce(this.estimateChanged, 500);
 
+  // Precomputed availability flags. These are recomputed only when the `lines`
+  // or `availabilities` inputs change (see ngOnChanges), instead of parsing
+  // Temporal dates in template bindings on every change-detection cycle.
+  private lineAvailability = new Map<V2ScheduleLine, boolean>();
+  private runnerAvailability = new Map<LineRunner, boolean>();
+
   iconBars = faBars;
   iconTimes = faTimes;
   iconEdit = faEdit;
@@ -72,19 +79,50 @@ export class ScheduleTableOldElementComponent {
   iconCalendarWeek = faCalendarWeek;
   iconCalendarTimes = faCalendarTimes;
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.lines || changes.availabilities) {
+      this.recomputeAvailabilities();
+    }
+  }
+
   public toggleExpand(linePosition: number, openOnly = false): void {
     toggleTableExpand(this.expanded, linePosition, openOnly);
     this.expanded = new Set(this.expanded);
+    // OnPush: this can be called directly by the parent (via ViewChild), so
+    // it must explicitly request a re-check.
+    this.cdr.markForCheck();
   }
 
-  matchesAvailabilities(line: V2ScheduleLine): boolean {
-    return line.runners.every(runner => {
-      return this.isAvailable(line, runner);
-    });
+  isLineAvailable(line: V2ScheduleLine): boolean {
+    return this.lineAvailability.get(line) ?? true;
   }
 
-  isAvailable(line: V2ScheduleLine, runner: LineRunner) {
-    if (!runner.profile) {
+  isRunnerAvailable(runner: LineRunner): boolean {
+    return this.runnerAvailability.get(runner) ?? true;
+  }
+
+  private recomputeAvailabilities(): void {
+    const lineAvailability = new Map<V2ScheduleLine, boolean>();
+    const runnerAvailability = new Map<LineRunner, boolean>();
+
+    for (const line of this.lines) {
+      let lineAvailable = true;
+
+      for (const runner of line.runners) {
+        const runnerAvailable = this.computeIsAvailable(line, runner);
+        runnerAvailability.set(runner, runnerAvailable);
+        lineAvailable = lineAvailable && runnerAvailable;
+      }
+
+      lineAvailability.set(line, lineAvailable);
+    }
+
+    this.lineAvailability = lineAvailability;
+    this.runnerAvailability = runnerAvailability;
+  }
+
+  private computeIsAvailable(line: V2ScheduleLine, runner: LineRunner): boolean {
+    if (!runner.profile || !line.date) {
       return true;
     }
 
@@ -123,7 +161,6 @@ export class ScheduleTableOldElementComponent {
   }
 
   scheduleDrop(event: CdkDragDrop<V2ScheduleLine[]>) {
-    console.log({ ...event });
     moveItemInArray(this.lines, event.previousIndex, event.currentIndex);
     this.computeSchedule.emit();
   }
@@ -134,6 +171,9 @@ export class ScheduleTableOldElementComponent {
 
   toggleCollapseAll(open: boolean): void {
     this.showAllCustomData = open;
+    // OnPush: called directly by the parent (via ViewChild), so it must
+    // explicitly request a re-check.
+    this.cdr.markForCheck();
   }
 
   onCustomDataBlur(lineIndex: number, event: FocusEvent) {
