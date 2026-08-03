@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../../../assets/table';
 @use '../../../../assets/table/variables' as table-vars;
 
@@ -352,7 +353,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
-    color: lighten(table-vars.$info-color, 20%);
+    color: color.adjust(table-vars.$info-color, $lightness: 20%);
 
     .runner-line-name {
       display: inline-flex;
@@ -363,7 +364,7 @@
   }
 
   .runner-line-type {
-    color: lighten(table-vars.$info-color, 20%);
+    color: color.adjust(table-vars.$info-color, $lightness: 20%);
   }
 
   > .day {	

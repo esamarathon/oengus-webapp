@@ -1,5 +1,10 @@
 @use 'sass:color' as color;
 @use "vis-timeline/dist/vis-timeline-graph2d.min.css";
+@use './elements';
+@use 'bulma-extensions/dist/css/bulma-extensions.min.css';
+@use "flag-icon-css/css/flag-icons.min.css";
+@use 'markdown-it-github-alerts/styles/github-base.css';
+@use '../../app/components/wizi/alert/alert.component';
 
 @import 'bulmaswatch/solar/variables';
 
@@ -31,16 +36,9 @@ $bulmaswatch-import-font: false;
 @import 'bulma/bulma';
 @import 'bulmaswatch/solar/overrides';
 @import '@duncte123/bulma-tagsinput/src/sass/index';
-@import './elements';
-
-@import 'bulma-extensions/dist/css/bulma-extensions.min.css';
 @import 'bulma-extensions/bulma-tooltip/src/sass/index';
 // Manually copied in the file, it was not exported
 @import "./assets/themes/ng-pick-datetime-picker.min.css";
-@import "flag-icon-css/css/flag-icons.min.css";
-
-// Import global wizi styles
-@import '../../app/components/wizi/alert/alert.component';
 
 
 // set the colours from the dark mode ourselves
@@ -53,5 +51,3 @@ $bulmaswatch-import-font: false;
   --color-caution: #f85149;
   --color-important: #a371f7;
 }
-
-@import 'markdown-it-github-alerts/styles/github-base.css';

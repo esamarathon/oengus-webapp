@@ -1,4 +1,8 @@
 @use 'sass:color' as color;
+@use 'bulmaswatch/solar/variables' as *;
+
+$discordBlurple: #5865F2;
+$twitchPurple: #9146FF;
 
 .button.is-twitch {
   color: white;

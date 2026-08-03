@@ -1,3 +1,9 @@
+@use 'bulmaswatch/solar/variables' as *;
+
+$white: white;
+$success: $green;
+$danger: $red;
+
 .nwb-alert {
   .alert {
     z-index: 999999;

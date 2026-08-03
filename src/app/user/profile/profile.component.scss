@@ -1,4 +1,4 @@
-@import "bulmaswatch/solar/variables";
+@use "bulmaswatch/solar/variables" as *;
 
 h1 small {
   font-size: 0.5em;

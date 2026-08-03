@@ -3,8 +3,10 @@
 // @author Kitty Giraudel
 ////
 
+@use 'sass:meta';
+
 @function is-number($value) {
-  @return type-of($value) == 'number';
+  @return meta.type-of($value) == 'number';
 }
 
 @function is-time($value) {
