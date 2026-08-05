@@ -147,13 +147,44 @@ vi.useRealTimers();
 
 Always call `vi.useRealTimers()` in `afterEach` to avoid leaking fake timers.
 
-### 2.8 (Optional) Custom Vitest config
+### 2.8 Code coverage
+
+Install the coverage provider:
+
+```bash
+npm install --save-dev @vitest/coverage-v8
+```
+
+Add coverage options to `angular.json` (can be added later, after tests exist):
+
+```json
+"test": {
+  "builder": "@angular/build:unit-test",
+  "options": {
+    "coverage": true,
+    "coverageReporters": ["html", "lcov"],
+    "coverageThresholds": {
+      "statements": 80,
+      "branches": 80,
+      "functions": 80,
+      "lines": 80
+    },
+    "coverageExclude": ["src/testing/**"]
+  }
+}
+```
+
+- `ng test --coverage` generates a `coverage/` directory with an HTML report.
+- Thresholds cause CI to fail if coverage drops below the configured minimums.
+- `lcov` output integrates with Codecov/Coveralls/SonarQube.
+
+### 2.9 (Optional) Custom Vitest config
 
 If needed later, add `runnerConfig` to angular.json options pointing to a
 `vitest.config.ts`. The CLI will override `test.projects` and `test.include`
 automatically.
 
-### 2.9 Verify
+### 2.10 Verify
 
 Run `npm run test` — it should complete with 0 test suites found and no errors.
 This confirms the Vitest pipeline is wired up correctly before any specs exist.
@@ -223,6 +254,8 @@ export const commonTestProviders = [
 - **`compileComponents()`:** only required when the component uses `@defer` blocks.
 - **Page Objects:** for complex components, encapsulate DOM queries in a `Page` class
   with getter properties to reduce duplication and improve readability.
+- **Debugging:** run `ng test --debug` to pause and attach VS Code or Chrome DevTools.
+  For browser-specific issues, ensure Vitest browser mode is configured first.
 - **Coverage target:** ≥ 80% statements for services & pure utils; ≥ 70% for components.
 
 ---
@@ -368,29 +401,89 @@ describe('LoginComponent', () => {
 });
 ```
 
-### 5.5 Components with route data
+### 5.5 Routed components — `RouterTestingHarness`
 
-**Option A — `RouterTestingHarness` (preferred for routed components):**
+Use `provideRouter` with real route configs and `RouterTestingHarness` — do NOT
+mock the Angular Router directly. The harness navigates to real URLs and returns
+typed component instances.
+
+**Basic routed component:**
 
 ```typescript
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-beforeEach(() => {
-  TestBed.configureTestingModule({
-    providers: [provideRouter([{ path: 'marathon/:id', component: MarathonComponent }])],
-  });
-});
+describe('MarathonComponent', () => {
+  let harness: RouterTestingHarness;
 
-it('loads marathon by route param', async () => {
-  const harness = await RouterTestingHarness.create();
-  const comp = await harness.navigateByUrl('/marathon/abc', MarathonComponent);
-  await harness.fixture.whenStable();
-  expect(comp.marathon).toBeDefined();
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      imports: [MarathonComponent],
+      providers: [provideRouter([{ path: 'marathon/:id', component: MarathonComponent }])],
+    });
+    harness = await RouterTestingHarness.create();
+  });
+
+  it('reads marathon id from route param', async () => {
+    const comp = await harness.navigateByUrl('/marathon/abc', MarathonComponent);
+    expect(comp.marathonId).toBe('abc');
+  });
+
+  it('renders marathon name', async () => {
+    await harness.navigateByUrl('/marathon/abc', MarathonComponent);
+    expect(harness.routeNativeElement?.textContent).toContain('Marathon');
+  });
 });
 ```
 
-**Option B — Manual `ActivatedRoute` mock (simpler cases):**
+**Testing guards via `RouterTestingHarness` (integration):**
+
+```typescript
+it('redirects to login when not authenticated', async () => {
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: UserService, useValue: { user: null } },
+      provideRouter([
+        { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
+        { path: 'login', component: LoginComponent },
+      ]),
+    ],
+  });
+  const harness = await RouterTestingHarness.create();
+  // Pass the REDIRECT TARGET component as second arg
+  await harness.navigateByUrl('/settings', LoginComponent);
+  expect(harness.routeNativeElement?.textContent).toContain('Login');
+});
+```
+
+**Testing query params (reactive via `toSignal`):**
+
+```typescript
+it('reads search term from query params', async () => {
+  const comp = await harness.navigateByUrl('/search?q=angular', SearchComponent);
+  expect(comp.searchTerm()).toBe('angular');
+});
+```
+
+**Testing nested routes:**
+
+```typescript
+TestBed.configureTestingModule({
+  providers: [provideRouter([{
+    path: 'marathon/:id',
+    component: MarathonLayoutComponent,
+    children: [{ path: 'submit', component: SubmitComponent }],
+  }])],
+});
+const harness = await RouterTestingHarness.create();
+await harness.navigateByUrl('/marathon/abc/submit');
+expect(harness.routeNativeElement?.textContent).toContain('Submit');
+```
+
+**When NOT to use the harness:** named outlets or very complex routing logic
+where a custom test host component is easier.
+
+**Fallback — manual `ActivatedRoute` mock (simplest cases only):**
 
 ```typescript
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
@@ -495,10 +588,63 @@ describe('DashboardHeroComponent (via host)', () => {
 });
 ```
 
-### 5.10 Directives, Guards, Resolvers
+### 5.10 Attribute directives — test host pattern
 
-Use Vitest APIs (`vi.fn()`, `Mocked<T>`, `expect(...).toBe(true)`).
-Guards and resolvers that use `inject()` should be tested with
+Directives cannot be tested in isolation (they need a host element). Create a
+minimal test component that exercises all usage variants:
+
+```typescript
+import { Component } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { HighlightDirective } from './highlight.directive';
+
+@Component({
+  imports: [HighlightDirective],
+  template: `
+    <p highlight="yellow">Explicit</p>
+    <p highlight>Default</p>
+    <p>No directive</p>
+  `,
+})
+class TestHost {}
+
+describe('HighlightDirective', () => {
+  let fixture: ComponentFixture<TestHost>;
+
+  beforeEach(async () => {
+    fixture = TestBed.createComponent(TestHost);
+    await fixture.whenStable();
+  });
+
+  it('applies explicit color', () => {
+    const des = fixture.debugElement.queryAll(By.directive(HighlightDirective));
+    expect(des[0].nativeElement.style.backgroundColor).toBe('yellow');
+  });
+
+  it('applies default color when no value given', () => {
+    const des = fixture.debugElement.queryAll(By.directive(HighlightDirective));
+    const dir = des[1].injector.get(HighlightDirective);
+    expect(des[1].nativeElement.style.backgroundColor).toBe(dir.defaultColor);
+  });
+
+  it('does not affect elements without the directive', () => {
+    const bare = fixture.debugElement.query(By.css('p:not([highlight])'));
+    expect(bare.nativeElement.style.backgroundColor).toBe('');
+  });
+});
+```
+
+**Key APIs for directive tests:**
+- `By.directive(DirectiveClass)` — query elements that have the directive
+- `debugElement.injector.get(Directive)` — access the directive instance
+- `element.dispatchEvent(new Event('input'))` — simulate DOM events
+- `fixture.componentRef.setInput()` — programmatic input to the host
+
+### 5.11 Guards and Resolvers
+
+Functional guards/resolvers using `inject()` should be tested with
 `TestBed.runInInjectionContext`:
 
 ```typescript
@@ -617,8 +763,8 @@ Use `mockReturnValue()` to control return values and `mockClear()` in `afterEach
 | Dependency | How to mock |
 |---|---|
 | `HttpClient` | `provideHttpClient()` + `provideHttpClientTesting()` + `HttpTestingController` |
-| `Router` | `Mocked<Pick<Router, 'navigate'>>` with `vi.fn()` methods |
-| `ActivatedRoute` | Fake object with `snapshot`, `paramMap`, `parent` — or `RouterTestingHarness` |
+| `Router` / routing | `provideRouter([...])` + `RouterTestingHarness` (preferred) — do NOT mock Router |
+| `ActivatedRoute` | Only as fallback: fake object with `snapshot`, `paramMap`, `parent` |
 | `TranslateService` | `{ get: vi.fn(() => of(key)), instant: vi.fn(k => k) }` |
 | `NotificationService` | `{ toast: vi.fn(), toastRaw: vi.fn() }` |
 | `UserService` | Object with `user`, `token` props + `vi.fn()` methods |
@@ -632,16 +778,38 @@ Use `mockReturnValue()` to control return values and `mockClear()` in `afterEach
 
 ## 9. Reference: Key Vitest + Angular Testing APIs
 
-### Angular testing
+### Angular testing — TestBed
 
-- `TestBed.configureTestingModule` / `TestBed.inject` / `TestBed.createComponent`
-- `TestBed.runInInjectionContext` (for `inject()`-based pipes/directives/resolvers)
-- `TestBed.overrideComponent` (for replacing component-level providers or imports)
-- `ComponentFixture`, `await fixture.whenStable()` (triggers change detection + waits)
-- `fixture.componentRef.setInput('name', value)` (programmatic input binding)
-- `fixture.nativeElement` / `fixture.debugElement` (DOM access)
-- `By.css()` / `By.directive()` (platform-independent queries on DebugElement)
+- `TestBed.configureTestingModule({ imports, providers, schemas })` — configure test module
+- `TestBed.inject(Service)` — get service from injector (optional 2nd arg for fallback)
+- `TestBed.createComponent(Component)` — create fixture (freezes config)
+- `TestBed.runInInjectionContext(fn)` — run functional guards/resolvers/pipes
+- `TestBed.overrideComponent(Comp, { set: { providers, imports } })` — override component-level DI
+- `TestBed.compileComponents()` — only needed for `@defer` blocks
+
+### Angular testing — ComponentFixture
+
+- `fixture.componentInstance` — the component class instance
+- `await fixture.whenStable()` — trigger change detection + wait for async
+- `fixture.componentRef.setInput('name', value)` — programmatic input binding
+- `fixture.nativeElement` / `fixture.debugElement` — DOM access
+- `fixture.changeDetectorRef` — for OnPush components
+- `fixture.autoDetectChanges(true)` — auto-run change detection (use sparingly)
+- `fixture.destroy()` — trigger component destruction
+
+### Angular testing — DebugElement
+
+- `debugElement.query(predicate)` / `.queryAll(predicate)` — find child elements
+- `By.css(selector)` / `By.directive(Directive)` / `By.all` — query predicates
+- `debugElement.injector.get(Token)` — access element-level injector
+- `debugElement.triggerEventHandler('click', eventObj)` — trigger template listeners
+- `debugElement.nativeElement` — unwrap to native DOM element
+- `debugElement.references` — template local variables (`#foo`)
+
+### Angular testing — Routing & HTTP
+
 - `provideRouter` + `RouterTestingHarness` (routed component testing)
+- `RouterTestingHarness.create()`, `.navigateByUrl(url, Component)`, `.routeNativeElement`
 - `provideHttpClient` + `provideHttpClientTesting` + `HttpTestingController`
 - `NO_ERRORS_SCHEMA` (shallow testing — ignore unknown elements)
 
@@ -656,6 +824,24 @@ Use `mockReturnValue()` to control return values and `mockClear()` in `afterEach
 ### NOT available with Vitest
 
 - `fakeAsync`, `tick`, `flush` — these require zone.js and do NOT work with Vitest
+
+---
+
+## 10. Future Considerations
+
+### Component Test Harnesses
+
+Angular supports [component harnesses](https://angular.dev/guide/testing/component-harnesses-overview)
+— classes that provide a stable, user-facing API for interacting with components
+in tests. Benefits:
+
+- Insulate tests from DOM structure / CSS class changes
+- Same harness works in both unit and E2E tests
+- Improve test readability for complex components
+
+Consider creating harnesses for widely reused components (e.g. `elements/**`,
+`oengus-common/**`) once the basic test suite is stable. This is NOT required
+for the initial testing effort.
 
 ---
 
