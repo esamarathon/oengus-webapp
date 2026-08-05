@@ -58,29 +58,20 @@ builder handles TestBed integration natively.
 
 ### 2.2 Update angular.json
 
-Change the test target builder:
+Change the test target builder. Remove the entire existing `test` block (including
+all Karma-specific options like `polyfills`, `assets`, `styles`, `main`,
+`karmaConfig`) and replace with:
 
 ```json
 "test": {
-  "builder": "@angular-devkit/build-angular:karma",
-  "options": { ... }
+  "builder": "@angular/build:unit-test"
 }
 ```
 
-becomes:
-
-```json
-"test": {
-  "builder": "@angular/build:unit-test",
-  "options": {
-    "tsConfig": "src/tsconfig.spec.json",
-    "buildTarget": "::development"
-  }
-}
-```
-
-The new builder does NOT support `polyfills`, `assets`, `styles`, `main`, or
-`karmaConfig` directly — remove all of those from the test options.
+The builder defaults to `tsConfig: "tsconfig.spec.json"` and
+`buildTarget: "::development"` (meaning: compile using the project's `build`
+target with the `development` configuration). No explicit options needed unless
+your setup differs.
 
 ### 2.3 Update tsconfig.spec.json
 
@@ -116,19 +107,44 @@ Delete files:
 "test:ci": "ng test --no-watch"
 ```
 
-### 2.6 (Optional) zone.js support for fakeAsync
+### 2.6 Browser testing with Playwright (Firefox + Chrome)
+
+Install the Playwright browser provider:
+
+```bash
+npm install --save-dev @vitest/browser-playwright
+```
+
+Configure `angular.json` to run tests in both Chromium and Firefox:
+
+```json
+"test": {
+  "builder": "@angular/build:unit-test",
+  "options": {
+    "tsConfig": "src/tsconfig.spec.json",
+    "buildTarget": "::development",
+    "browsers": ["chromium", "firefox"]
+  }
+}
+```
+
+Headless mode activates automatically when the `CI` environment variable is set.
+For explicit headless in CI scripts, use browser names suffixed with `Headless`
+(e.g. `"ChromiumHeadless"`, `"FirefoxHeadless"`).
+
+### 2.7 (Optional) zone.js support for fakeAsync
 
 If specs need `fakeAsync`/`flush`/`waitForAsync`, add `zone.js/plugins/vitest-patch`
 to polyfills in the test target. Long-term, prefer native async and Vitest fake
 timers (`vi.useFakeTimers()`).
 
-### 2.7 (Optional) Custom Vitest config
+### 2.8 (Optional) Custom Vitest config
 
 If needed later, add `runnerConfig` to angular.json options pointing to a
 `vitest.config.ts`. The CLI will override `test.projects` and `test.include`
 automatically.
 
-### 2.8 Verify
+### 2.9 Verify
 
 Run `npm run test` — it should complete with 0 test suites found and no errors.
 This confirms the Vitest pipeline is wired up correctly before any specs exist.
