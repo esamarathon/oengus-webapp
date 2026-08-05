@@ -132,11 +132,20 @@ Headless mode activates automatically when the `CI` environment variable is set.
 For explicit headless in CI scripts, use browser names suffixed with `Headless`
 (e.g. `"ChromiumHeadless"`, `"FirefoxHeadless"`).
 
-### 2.7 (Optional) zone.js support for fakeAsync
+### 2.7 Fake timers (replacing fakeAsync)
 
-If specs need `fakeAsync`/`flush`/`waitForAsync`, add `zone.js/plugins/vitest-patch`
-to polyfills in the test target. Long-term, prefer native async and Vitest fake
-timers (`vi.useFakeTimers()`).
+`fakeAsync` from `@angular/core/testing` **cannot be used with Vitest** — no
+`zone.js` patch is applied. Use Vitest's native fake timers instead:
+
+```typescript
+vi.useFakeTimers();
+// ... create component, trigger async work ...
+await vi.runAllTimersAsync();
+// ... assertions ...
+vi.useRealTimers();
+```
+
+Always call `vi.useRealTimers()` in `afterEach` to avoid leaking fake timers.
 
 ### 2.8 (Optional) Custom Vitest config
 
@@ -201,11 +210,19 @@ export const commonTestProviders = [
 - **AAA:** structure every test as Arrange / Act / Assert.
 - **Vitest APIs:** use `describe`, `it`, `expect`, `vi.fn()`, `vi.spyOn()`,
   `beforeEach`, `afterEach` — these are globals via `globals: true`.
+- **Type-safe mocks:** use `Mocked<T>` from Vitest for stub objects.
+- **Mock lifecycle:** use `mockReturnValue()` for controlled returns; call
+  `mockClear()` in `afterEach` to reset spy state between tests.
 - **No real HTTP / no real timers / no real router navigation.** Always mock.
+- **No `fakeAsync`:** use `vi.useFakeTimers()` + `await vi.runAllTimersAsync()`.
 - **Prefer `HttpTestingController`** (`provideHttpClientTesting`) for services.
 - **Prefer `vi.fn()` mocks over full dependency instances** for components.
 - **Isolate `localStorage`:** in `beforeEach`, `localStorage.clear()` or spy.
 - **Deterministic dates:** inject/stub `TemporalServiceService`; never rely on real `now`.
+- **Change detection:** use `await fixture.whenStable()` — NOT `fixture.detectChanges()`.
+- **`compileComponents()`:** only required when the component uses `@defer` blocks.
+- **Page Objects:** for complex components, encapsulate DOM queries in a `Page` class
+  with getter properties to reduce duplication and improve readability.
 - **Coverage target:** ≥ 80% statements for services & pure utils; ≥ 70% for components.
 
 ---
@@ -223,8 +240,8 @@ import { parseMastodonUrl } from './helpers';
 describe('helpers', () => {
   describe('parseMastodonUrl', () => {
     it('should convert @user@instance to a profile URL', () => {
-      expect(parseMastodonUrl('@a@mastodon.social'))
-        .toBe('https://mastodon.social/@a');
+      expect(parseMastodonUrl('@duncte123@tech.lgbt'))
+        .toBe('https://tech.lgbt/@duncte123');
     });
     it('should handle empty input gracefully', () => {
       expect(parseMastodonUrl('')).toBe('');
@@ -236,22 +253,30 @@ describe('helpers', () => {
 ### 5.2 Services WITHOUT HTTP (pure logic)
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, Mocked } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
 describe('AuthService (pure logic)', () => {
   let service: AuthService;
+  let notificationStub: Mocked<Pick<NotificationService, 'toastRaw'>>;
 
   beforeEach(() => {
+    notificationStub = { toastRaw: vi.fn() };
+
     TestBed.configureTestingModule({
       providers: [
         AuthService,
-        { provide: NotificationService, useValue: { toastRaw: vi.fn() } },
+        { provide: NotificationService, useValue: notificationStub },
       ],
     });
     service = TestBed.inject(AuthService);
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    notificationStub.toastRaw.mockClear();
   });
 
   it('isTokenExpired returns true for a past exp claim', () => {
@@ -291,8 +316,8 @@ describe('MarathonService', () => {
 
   it('find() GETs the marathon by id', () => {
     let result: any;
-    service.find('ABC').subscribe(m => (result = m));
-    const req = http.expectOne(/\/v1\/marathons\/ABC/);
+    service.find('abc').subscribe(m => (result = m));
+    const req = http.expectOne(/\/v1\/marathons\/abc/);
     expect(req.request.method).toBe('GET');
     req.flush({ startDate: '2026-01-01T00:00:00Z' });
     expect(result.startDate).toBeDefined();
@@ -303,31 +328,36 @@ describe('MarathonService', () => {
 ### 5.4 Components — standalone
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, Mocked } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LoginComponent } from './login.component';
 import { TranslateTestingModule } from '../../../testing/translate-testing';
+import { AuthService } from '...';
+import { Router } from '@angular/router';
 
 describe('LoginComponent', () => {
   let fixture: ComponentFixture<LoginComponent>;
   let component: LoginComponent;
+  let authService: Mocked<Pick<AuthService, 'performLogin'>>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
+    authService = { performLogin: vi.fn() };
+
+    TestBed.configureTestingModule({
       imports: [LoginComponent, TranslateTestingModule],
       providers: [
-        { provide: AuthService, useValue: { performLogin: vi.fn() } },
+        { provide: AuthService, useValue: authService },
         { provide: Router, useValue: { navigate: vi.fn() } },
       ],
-    }).compileComponents();
+    });
 
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component).toBeDefined();
   });
 
   it('lowercases username before login', () => {
@@ -340,22 +370,143 @@ describe('LoginComponent', () => {
 
 ### 5.5 Components with route data
 
+**Option A — `RouterTestingHarness` (preferred for routed components):**
+
+```typescript
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+
+beforeEach(() => {
+  TestBed.configureTestingModule({
+    providers: [provideRouter([{ path: 'marathon/:id', component: MarathonComponent }])],
+  });
+});
+
+it('loads marathon by route param', async () => {
+  const harness = await RouterTestingHarness.create();
+  const comp = await harness.navigateByUrl('/marathon/abc', MarathonComponent);
+  await harness.fixture.whenStable();
+  expect(comp.marathon).toBeDefined();
+});
+```
+
+**Option B — Manual `ActivatedRoute` mock (simpler cases):**
+
 ```typescript
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 
 // In providers:
 { provide: ActivatedRoute, useValue: {
-  snapshot: { data: { marathon: makeMarathon() }, paramMap: convertToParamMap({ id: 'ABC' }) },
-  paramMap: of(convertToParamMap({ id: 'ABC' })),
+  snapshot: { data: { marathon: makeMarathon() }, paramMap: convertToParamMap({ id: 'abc' }) },
+  paramMap: of(convertToParamMap({ id: 'abc' })),
 } }
 ```
 
-### 5.6 Pipes, Directives, Guards, Resolvers
+### 5.6 Setting component inputs programmatically
 
-Same patterns as before but using Vitest APIs (`vi.fn()` instead of
-`jasmine.createSpyObj`, `expect(...).toBe(true)` instead of
-`expect(...).toBeTrue()`).
+Use `setInput` for signal- or decorator-based `@Input` properties:
+
+```typescript
+fixture.componentRef.setInput('hero', expectedHero);
+await fixture.whenStable();
+expect(fixture.nativeElement.querySelector('.name').textContent).toBe(expectedHero.name);
+```
+
+### 5.7 Pipes — direct instantiation (no TestBed)
+
+Pure pipes have no dependencies; test them as plain classes:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { MarkdownPipe } from './markdown.pipe';
+
+describe('MarkdownPipe', () => {
+  const pipe = new MarkdownPipe(/* inject mock MarkdownService if needed */);
+
+  it('transforms markdown to html', () => {
+    expect(pipe.transform('**bold**')).toContain('<strong>bold</strong>');
+  });
+});
+```
+
+If a pipe has injected dependencies, use TestBed:
+
+```typescript
+beforeEach(() => {
+  TestBed.configureTestingModule({
+    providers: [MarkdownPipe, { provide: MarkdownService, useValue: mockMarkdownService }],
+  });
+  pipe = TestBed.inject(MarkdownPipe);
+});
+```
+
+### 5.8 Shallow testing (nested components)
+
+For components with many child components, use `NO_ERRORS_SCHEMA` or stub
+components to avoid importing the entire dependency tree:
+
+```typescript
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+
+TestBed.configureTestingModule({
+  imports: [ParentComponent],
+  schemas: [NO_ERRORS_SCHEMA],
+});
+```
+
+Or override imports with stubs for children you need to interact with:
+
+```typescript
+@Component({ selector: 'app-child', template: '' })
+class ChildStub {}
+
+TestBed.overrideComponent(ParentComponent, {
+  set: { imports: [ChildStub] },
+});
+```
+
+**Caveat:** `NO_ERRORS_SCHEMA` silently ignores misspelled selectors/attributes.
+Use stubs for child components you assert against; schema for the rest.
+
+### 5.9 Test Host pattern (input/output binding)
+
+For components with `@Input`/`@Output`, create a test host that mirrors real usage:
+
+```typescript
+@Component({
+  imports: [DashboardHeroComponent],
+  template: `<dashboard-hero [hero]="hero" (selected)="onSelected($event)" />`,
+})
+class TestHost {
+  hero = makeHero();
+  selectedHero?: Hero;
+  onSelected(hero: Hero) { this.selectedHero = hero; }
+}
+
+describe('DashboardHeroComponent (via host)', () => {
+  it('raises selected event on click', async () => {
+    const fixture = TestBed.createComponent(TestHost);
+    await fixture.whenStable();
+    fixture.nativeElement.querySelector('.hero').click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.selectedHero).toBe(fixture.componentInstance.hero);
+  });
+});
+```
+
+### 5.10 Directives, Guards, Resolvers
+
+Use Vitest APIs (`vi.fn()`, `Mocked<T>`, `expect(...).toBe(true)`).
+Guards and resolvers that use `inject()` should be tested with
+`TestBed.runInInjectionContext`:
+
+```typescript
+it('redirects unauthenticated users', () => {
+  const result = TestBed.runInInjectionContext(() => authGuard());
+  expect(result).toBe(false);
+});
+```
 
 ---
 
@@ -448,11 +599,26 @@ Each service gets its own commit:
 
 ## 8. Mocking Cheat-Sheet (Vitest edition)
 
+### Type-safe stubs with `Mocked<T>`
+
+```typescript
+import { Mocked } from 'vitest';
+
+const routerStub: Mocked<Pick<Router, 'navigate' | 'navigateByUrl'>> = {
+  navigate: vi.fn(),
+  navigateByUrl: vi.fn(),
+};
+```
+
+Use `mockReturnValue()` to control return values and `mockClear()` in `afterEach`.
+
+### Quick reference
+
 | Dependency | How to mock |
 |---|---|
 | `HttpClient` | `provideHttpClient()` + `provideHttpClientTesting()` + `HttpTestingController` |
-| `Router` | `{ navigate: vi.fn(), navigateByUrl: vi.fn() }` |
-| `ActivatedRoute` | Fake object with `snapshot`, `paramMap`, `parent` |
+| `Router` | `Mocked<Pick<Router, 'navigate'>>` with `vi.fn()` methods |
+| `ActivatedRoute` | Fake object with `snapshot`, `paramMap`, `parent` — or `RouterTestingHarness` |
 | `TranslateService` | `{ get: vi.fn(() => of(key)), instant: vi.fn(k => k) }` |
 | `NotificationService` | `{ toast: vi.fn(), toastRaw: vi.fn() }` |
 | `UserService` | Object with `user`, `token` props + `vi.fn()` methods |
@@ -460,18 +626,36 @@ Each service gets its own commit:
 | `TemporalServiceService` | `{ parseDate: vi.fn(), now: vi.fn(), timeZone: 'UTC' }` |
 | `MarkdownService` | `{ renderInlineSimple: vi.fn(x => x), render: vi.fn(x => x) }` |
 | `localStorage` | `localStorage.clear()` in `beforeEach`, or `vi.spyOn(Storage.prototype, 'getItem')` |
+| Timers / async | `vi.useFakeTimers()` + `await vi.runAllTimersAsync()` + `vi.useRealTimers()` |
 
 ---
 
 ## 9. Reference: Key Vitest + Angular Testing APIs
 
+### Angular testing
+
 - `TestBed.configureTestingModule` / `TestBed.inject` / `TestBed.createComponent`
 - `TestBed.runInInjectionContext` (for `inject()`-based pipes/directives/resolvers)
-- `ComponentFixture`, `fixture.detectChanges()`, `fixture.whenStable()`
-- `fakeAsync`, `tick`, `flush` (from `@angular/core/testing` — still work with Vitest)
+- `TestBed.overrideComponent` (for replacing component-level providers or imports)
+- `ComponentFixture`, `await fixture.whenStable()` (triggers change detection + waits)
+- `fixture.componentRef.setInput('name', value)` (programmatic input binding)
+- `fixture.nativeElement` / `fixture.debugElement` (DOM access)
+- `By.css()` / `By.directive()` (platform-independent queries on DebugElement)
+- `provideRouter` + `RouterTestingHarness` (routed component testing)
 - `provideHttpClient` + `provideHttpClientTesting` + `HttpTestingController`
-- `vi.fn()`, `vi.spyOn()`, `vi.mocked()` — Vitest mocking utilities
-- `describe`, `it`, `expect`, `beforeEach`, `afterEach` — Vitest globals
+- `NO_ERRORS_SCHEMA` (shallow testing — ignore unknown elements)
+
+### Vitest
+
+- `describe`, `it`, `expect`, `beforeEach`, `afterEach` — globals
+- `vi.fn()`, `vi.spyOn()`, `vi.mocked()` — mocking utilities
+- `Mocked<T>` — type utility for type-safe mock objects
+- `mockReturnValue()`, `mockClear()` — control and reset mocks
+- `vi.useFakeTimers()`, `await vi.runAllTimersAsync()`, `vi.useRealTimers()` — timer control
+
+### NOT available with Vitest
+
+- `fakeAsync`, `tick`, `flush` — these require zone.js and do NOT work with Vitest
 
 ---
 
