@@ -7,6 +7,11 @@
 > Angular 22 uses **Vitest** as the default test framework. This plan migrates from
 > the legacy Karma/Jasmine setup to Vitest, then adds tests incrementally in small,
 > independently mergeable steps.
+>
+> **Important:** When unsure about any package, API, or configuration, consult the
+> official Angular documentation or ask the user for current docs. Do NOT rely on
+> potentially outdated knowledge. Angular's tooling evolves rapidly — always verify
+> against the source before implementing.
 
 ---
 
