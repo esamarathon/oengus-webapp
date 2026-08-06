@@ -11,5 +11,5 @@ export const commonTestProviders = [
 
 export const routerTestProviders = [
   { provide: ActivatedRoute, useValue: {} },
-  { provide: LocalizeRouterService, useValue: { translateRoute: (path: string) => path, routerEvents: new Subject() } },
+  { provide: LocalizeRouterService, useValue: { translateRoute: (path: string) => path, routerEvents: new Subject(), currentLang: 'en' } },
 ];
