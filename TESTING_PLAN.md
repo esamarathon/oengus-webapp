@@ -731,8 +731,49 @@ Each service gets its own commit:
 - `marathon/incentive/**`, `marathon/incentive-management/**`
 - `marathon/new-marathon/**`, `marathon/marathon.component.spec.ts`
 
-### Step 11 — Factories cleanup
-The file with all the factories has gotten quite large. It should be split up in logical files to reduce file size and congnitive load.
+### Step 11 — Factories cleanup ✅
+The file with all the factories has gotten quite large. It should be split up in logical files to reduce file size and cognitive load.
+
+### Step 12 — Add `http.verify()` to all HTTP service specs ✅
+§7 requires `http.verify()` in `afterEach` for every HTTP spec. Currently **none** of the 9 HTTP service specs have it:
+- `src/services/marathon.service.spec.ts`
+- `src/services/user.service.spec.ts`
+- `src/services/category.service.spec.ts`
+- `src/services/donation.service.spec.ts`
+- `src/services/game.service.spec.ts`
+- `src/services/incentive.service.spec.ts`
+- `src/services/schedule.service.spec.ts`
+- `src/services/selection.service.spec.ts`
+- `src/services/submission.service.spec.ts`
+
+Each file needs:
+```typescript
+afterEach(() => {
+  httpTesting.verify();
+});
+```
+
+### Step 13 — Replace `fixture.detectChanges()` with `await fixture.whenStable()`
+§4 says "use `await fixture.whenStable()` — NOT `fixture.detectChanges()`". 7 files (28 occurrences) violate this:
+- `src/app/marathon/settings/settings.component.spec.ts`
+- `src/app/user/saved-games-settings/saved-games-settings.component.spec.ts`
+- `src/app/user/saved-games-settings/category-editor/category-editor.component.spec.ts`
+- `src/app/user/saved-games-settings/game-editor/game-editor.component.spec.ts`
+- `src/app/user/profile/profile.component.spec.ts`
+- `src/app/user/profile/profile-history/profile-history.component.spec.ts`
+- `src/app/user/management-dialog/management-dialog.component.spec.ts`
+
+Replace all `fixture.detectChanges()` calls with `await fixture.whenStable()` (making the containing function `async` if needed).
+
+### Step 14 — Isolate `localStorage` properly in service specs
+§4 requires `localStorage.clear()` in `beforeEach` for specs that touch localStorage. Two files use manual `setItem`/`removeItem` without `clear()`:
+- `src/services/game.service.spec.ts`
+- `src/services/schedule.service.spec.ts`
+
+Add `localStorage.clear()` to `beforeEach` in both files and remove the manual `removeItem` cleanup lines.
+
+### Step 15 — Remove bare `expect(component).toBeTruthy()` smoke tests
+§7 says "meaningful assertions (behavior), not just `expect(component).toBeTruthy()`". 80 spec files have a bare creation test as their first `it` block. These provide no value beyond what TestBed already guarantees (it throws if creation fails). Remove the `it('creates the component', …)` blocks from files that already have other behavioral assertions.
 
 ---
 
