@@ -29,6 +29,7 @@ export class TitleService {
   }
 
   resetTitle() {
+    this.mainTitle = this.baseTitle;
     this.title.setTitle(this.baseTitle);
   }
 }
