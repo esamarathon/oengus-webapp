@@ -31,32 +31,36 @@ describe('CategoryEditorComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('creates the component', () => {
+  it('creates the component', async () => {
     component.inputCategory = makeSavedCategory();
     component.gameId = 1;
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component).toBeTruthy();
   });
 
-  it('starts in editing mode for new categories (id < 1)', () => {
+  it('starts in editing mode for new categories (id < 1)', async () => {
     component.inputCategory = makeSavedCategory({ id: -1, estimate: 'PT1H30M' });
     component.gameId = 1;
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component.editing).toBe(true);
   });
 
-  it('starts in non-editing mode for existing categories', () => {
+  it('starts in non-editing mode for existing categories', async () => {
     component.inputCategory = makeSavedCategory({ id: 5, estimate: 'PT1H30M' });
     component.gameId = 1;
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component.editing).toBe(false);
   });
 
-  it('cancelEdit restores original category', () => {
+  it('cancelEdit restores original category', async () => {
     const original = makeSavedCategory({ id: -1, estimate: 'PT1H30M' });
     component.inputCategory = original;
     component.gameId = 1;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     component['category'].name = 'Modified';
     component['cancelEdit']();
@@ -65,10 +69,11 @@ describe('CategoryEditorComponent', () => {
     expect(component.editing).toBe(false);
   });
 
-  it('ngOnChanges resets editing when gameId changes', () => {
+  it('ngOnChanges resets editing when gameId changes', async () => {
     component.inputCategory = makeSavedCategory({ id: -1, estimate: 'PT1H30M' });
     component.gameId = 1;
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component.editing).toBe(true);
 
     component.ngOnChanges({
@@ -83,6 +88,7 @@ describe('CategoryEditorComponent', () => {
     component.inputCategory = makeSavedCategory({ id: -1, estimate: 'PT1H30M' });
     component.gameId = -1;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     const spy = vi.fn();
     component.saveGameInstead.subscribe(spy);
@@ -98,6 +104,7 @@ describe('CategoryEditorComponent', () => {
     component.inputCategory = cat;
     component.gameId = 10;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     savedGamesServiceStub.createCategory.mockReturnValue(of(created));
     const spy = vi.fn();
@@ -116,6 +123,7 @@ describe('CategoryEditorComponent', () => {
     component.inputCategory = cat;
     component.gameId = 10;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     savedGamesServiceStub.updateCategory.mockReturnValue(of(updated));
     const spy = vi.fn();
@@ -128,10 +136,11 @@ describe('CategoryEditorComponent', () => {
     expect(spy).toHaveBeenCalledWith(updated);
   });
 
-  it('parsedEstimate getter converts ISO to human format', () => {
+  it('parsedEstimate getter converts ISO to human format', async () => {
     component.inputCategory = makeSavedCategory();
     component.gameId = 1;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     component['category'].estimate = 'PT1H30M';
     expect(component.parsedEstimate).toBe('01:30:00');

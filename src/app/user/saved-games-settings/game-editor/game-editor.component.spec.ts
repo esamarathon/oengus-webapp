@@ -31,28 +31,32 @@ describe('GameEditorComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('creates the component', () => {
+  it('creates the component', async () => {
     component.inputGame = makeSavedGame();
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component).toBeTruthy();
   });
 
-  it('sets editing to true for new games (id < 1)', () => {
+  it('sets editing to true for new games (id < 1)', async () => {
     component.inputGame = makeSavedGame({ id: -1 });
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component.editing).toBe(true);
   });
 
-  it('sets editing to false for existing games', () => {
+  it('sets editing to false for existing games', async () => {
     component.inputGame = makeSavedGame({ id: 5 });
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component.editing).toBe(false);
   });
 
-  it('cancelEdit restores original game and exits editing', () => {
+  it('cancelEdit restores original game and exits editing', async () => {
     const original = makeSavedGame({ id: -1 });
     component.inputGame = original;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     component.game.name = 'Modified Name';
     (component as any).cancelEdit();
@@ -66,6 +70,7 @@ describe('GameEditorComponent', () => {
     const created = makeSavedGame({ id: 42 });
     component.inputGame = newGame;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     savedGamesServiceStub.create.mockReturnValue(of(created));
     const spy = vi.fn();
@@ -84,6 +89,7 @@ describe('GameEditorComponent', () => {
     const updated = { ...existing, name: 'Updated' };
     component.inputGame = existing;
     fixture.detectChanges();
+    await fixture.whenStable();
 
     savedGamesServiceStub.update.mockReturnValue(of(updated));
     const spy = vi.fn();

@@ -48,6 +48,8 @@ describe('ProfileHistoryComponent', () => {
     fixture = TestBed.createComponent(ProfileHistoryComponent);
     component = fixture.componentInstance;
     component.user = testUser;
+    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('creates the component', () => {
@@ -55,29 +57,24 @@ describe('ProfileHistoryComponent', () => {
   });
 
   it('defaults to submission tab', () => {
-    fixture.detectChanges();
     expect(component.activeTab).toBe('submission');
   });
 
   it('fetches submission history on init for default tab', () => {
-    fixture.detectChanges();
     expect(userServiceStub.getSubmissionHistory).toHaveBeenCalledWith(testUser.id);
   });
 
   it('fetches moderation history when tab switches', () => {
-    fixture.detectChanges();
     queryParamsSubject.next({ 'user-history': 'moderation' });
     expect(userServiceStub.getModerationHistory).toHaveBeenCalledWith(testUser.id);
   });
 
   it('fetches saved games when tab switches', () => {
-    fixture.detectChanges();
     queryParamsSubject.next({ 'user-history': 'saved' });
     expect(userServiceStub.getSavedGamesList).toHaveBeenCalledWith(testUser.id);
   });
 
   it('does not re-fetch when tab data is already loaded', () => {
-    fixture.detectChanges();
     expect(userServiceStub.getSubmissionHistory).toHaveBeenCalledTimes(1);
 
     queryParamsSubject.next({});
@@ -86,19 +83,16 @@ describe('ProfileHistoryComponent', () => {
 
   it('skips saved games fetch when savedGamesPublic is false', () => {
     testUser.savedGamesPublic = false;
-    fixture.detectChanges();
     queryParamsSubject.next({ 'user-history': 'saved' });
     expect(userServiceStub.getSavedGamesList).not.toHaveBeenCalled();
   });
 
   it('isActiveClass returns is-active for current tab', () => {
-    fixture.detectChanges();
     expect(component.isActiveClass('submission')).toEqual({ 'is-active': true });
     expect(component.isActiveClass('moderation')).toEqual({ 'is-active': false });
   });
 
   it('queryFor builds params preserving existing query', () => {
-    fixture.detectChanges();
     queryParamsSubject.next({ other: 'value' });
 
     const result = component.queryFor('moderation');
@@ -106,7 +100,6 @@ describe('ProfileHistoryComponent', () => {
   });
 
   it('resetTabs clears fetched state and re-fetches', () => {
-    fixture.detectChanges();
     expect(userServiceStub.getSubmissionHistory).toHaveBeenCalledTimes(1);
 
     component.resetTabs();

@@ -42,6 +42,7 @@ describe('ManagementDialogComponent', () => {
     component = fixture.componentInstance;
     component.user = testUser;
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('creates the component', () => {

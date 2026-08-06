@@ -250,7 +250,7 @@ export const commonTestProviders = [
 - **Prefer `vi.fn()` mocks over full dependency instances** for components.
 - **Isolate `localStorage`:** in `beforeEach`, `localStorage.clear()` or spy.
 - **Deterministic dates:** inject/stub `TemporalServiceService`; never rely on real `now`.
-- **Change detection:** use `await fixture.whenStable()` — NOT `fixture.detectChanges()`.
+- **Change detection:** use `fixture.detectChanges(); await fixture.whenStable();` — never bare `fixture.detectChanges()` without awaiting stability. The `detectChanges()` triggers lifecycle hooks (required with zone.js), then `whenStable()` waits for async work.
 - **`compileComponents()`:** only required when the component uses `@defer` blocks.
 - **Page Objects:** for complex components, encapsulate DOM queries in a `Page` class
   with getter properties to reduce duplication and improve readability.
@@ -753,8 +753,10 @@ afterEach(() => {
 });
 ```
 
-### Step 13 — Replace `fixture.detectChanges()` with `await fixture.whenStable()`
-§4 says "use `await fixture.whenStable()` — NOT `fixture.detectChanges()`". 7 files (28 occurrences) violate this:
+### Step 13 — Replace bare `fixture.detectChanges()` with `fixture.detectChanges(); await fixture.whenStable()` ✅
+§4 says "use `await fixture.whenStable()` — NOT bare `fixture.detectChanges()`". The correct pattern is
+`fixture.detectChanges(); await fixture.whenStable();` — `detectChanges()` triggers lifecycle hooks (ngOnInit),
+then `whenStable()` waits for async operations to settle. 7 files updated:
 - `src/app/marathon/settings/settings.component.spec.ts`
 - `src/app/user/saved-games-settings/saved-games-settings.component.spec.ts`
 - `src/app/user/saved-games-settings/category-editor/category-editor.component.spec.ts`
@@ -762,8 +764,6 @@ afterEach(() => {
 - `src/app/user/profile/profile.component.spec.ts`
 - `src/app/user/profile/profile-history/profile-history.component.spec.ts`
 - `src/app/user/management-dialog/management-dialog.component.spec.ts`
-
-Replace all `fixture.detectChanges()` calls with `await fixture.whenStable()` (making the containing function `async` if needed).
 
 ### Step 14 — Isolate `localStorage` properly in service specs
 §4 requires `localStorage.clear()` in `beforeEach` for specs that touch localStorage. Two files use manual `setItem`/`removeItem` without `clear()`:

@@ -44,6 +44,7 @@ describe('SavedGamesSettingsComponent', () => {
     fixture = TestBed.createComponent(SavedGamesSettingsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('creates the component', () => {
