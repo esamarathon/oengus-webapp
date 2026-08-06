@@ -65,11 +65,6 @@ describe('SubmissionsComponent', () => {
     fixture = TestBed.createComponent(SubmissionsComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('active defaults to submissions', () => {
     expect(component.active).toBe('submissions');
   });

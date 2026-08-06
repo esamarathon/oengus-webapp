@@ -30,15 +30,6 @@ describe('CategoryEditorComponent', () => {
     fixture = TestBed.createComponent(CategoryEditorComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', async () => {
-    component.inputCategory = makeSavedCategory();
-    component.gameId = 1;
-    fixture.detectChanges();
-    await fixture.whenStable();
-    expect(component).toBeTruthy();
-  });
-
   it('starts in editing mode for new categories (id < 1)', async () => {
     component.inputCategory = makeSavedCategory({ id: -1, estimate: 'PT1H30M' });
     component.gameId = 1;

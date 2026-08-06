@@ -19,11 +19,6 @@ describe('SidebarAdminComponent', () => {
     component = fixture.componentInstance;
     component.marathon = makeMarathon();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('marathonId returns the marathon id', () => {
     component.marathon = makeMarathon({ id: 'my-marathon' });
     expect(component.marathonId).toBe('my-marathon');

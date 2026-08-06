@@ -30,11 +30,6 @@ describe('MarathonHeaderComponent', () => {
     component = fixture.componentInstance;
     component.marathon = makeMarathon();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('marathonName returns name from marathonService', () => {
     const name = faker.company.name();
     marathonServiceStub.marathon = makeMarathon({ name });

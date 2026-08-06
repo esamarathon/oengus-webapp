@@ -51,11 +51,6 @@ describe('ProfileHistoryComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('defaults to submission tab', () => {
     expect(component.activeTab).toBe('submission');
   });

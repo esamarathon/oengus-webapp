@@ -20,11 +20,6 @@ describe('ImportRunDialogComponent', () => {
     fixture = TestBed.createComponent(ImportRunDialogComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('modalActive defaults to false', () => {
     expect(component.modalActive).toBe(false);
   });

@@ -30,11 +30,6 @@ describe('HomeComponent', () => {
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('marathon getter returns marathon from service', () => {
     const marathon = makeMarathon({ id: 'test-home' });
     marathonServiceStub.marathon = marathon;

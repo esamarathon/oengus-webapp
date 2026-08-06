@@ -19,11 +19,6 @@ describe('SubmissionsTableComponent', () => {
     fixture = TestBed.createComponent(SubmissionsTableComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('todoLines defaults to empty array', () => {
     expect(component.todoLines).toEqual([]);
   });

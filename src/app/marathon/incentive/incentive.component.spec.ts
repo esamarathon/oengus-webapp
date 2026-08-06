@@ -27,11 +27,6 @@ describe('IncentiveComponent', () => {
     fixture = TestBed.createComponent(IncentiveComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('incentives are loaded from route data', () => {
     expect(component.incentives).toBe(mockIncentives);
   });

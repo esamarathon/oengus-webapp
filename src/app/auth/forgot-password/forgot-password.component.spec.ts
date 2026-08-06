@@ -25,11 +25,6 @@ describe('ForgotPasswordComponent', () => {
     fixture = TestBed.createComponent(ForgotPasswordComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('returns early when form is null', async () => {
     await component.requestNewPassword(null);
     expect(authServiceStub.requestPasswordReset).not.toHaveBeenCalled();

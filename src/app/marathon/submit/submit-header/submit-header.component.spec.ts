@@ -29,11 +29,6 @@ describe('SubmitHeaderComponent', () => {
     fixture = TestBed.createComponent(SubmitHeaderComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('startDate proxies marathon startDate', () => {
     expect(component.startDate).toBe(marathon.startDate);
   });

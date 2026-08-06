@@ -76,11 +76,6 @@ describe('ScheduleComponent', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('schedule is populated from route data', () => {
     expect(component.schedule).toBe(mockSchedule);
   });

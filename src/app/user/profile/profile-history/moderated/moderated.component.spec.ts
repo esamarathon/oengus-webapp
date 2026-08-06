@@ -18,12 +18,6 @@ describe('ModeratedComponent', () => {
     fixture = TestBed.createComponent(ModeratedComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    component.history = [];
-    expect(component).toBeTruthy();
-  });
-
   it('moderatedMarathons returns history in reverse order', () => {
     const first = makeHistoryMarathon();
     const second = makeHistoryMarathon();

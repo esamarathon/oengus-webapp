@@ -26,11 +26,6 @@ describe('MarathonScheduleShareComponent', () => {
     component = fixture.componentInstance;
     component.schedule = { id: 1, marathonId: 'bsm2025', slug: 'main', name: 'Main', published: true, lines: [] } as V2Schedule;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('shareUrl builds from environment shortUrl, marathonId, and slug', () => {
     expect(component.shareUrl).toBe('https://d.ong.run/bsm2025/main');
   });

@@ -26,11 +26,6 @@ describe('MfaModalComponent', () => {
     fixture = TestBed.createComponent(MfaModalComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('saveMfa does nothing when mfaCode is empty', () => {
     component.mfaCode = '';
     component.saveMfa();

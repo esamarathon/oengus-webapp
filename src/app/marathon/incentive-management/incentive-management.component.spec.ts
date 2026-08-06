@@ -37,11 +37,6 @@ describe('IncentiveManagementComponent', () => {
     fixture = TestBed.createComponent(IncentiveManagementComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('addIncentive pushes new incentive', () => {
     component.incentives = [];
 

@@ -22,11 +22,6 @@ describe('SubmissionGameComponent', () => {
     component.userIsAdmin = false;
     component.selection = {} as any;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('getRawStatus', () => {
     it('returns empty string when selectionDone is false', () => {
       component.marathon = makeMarathon({ selectionDone: false });

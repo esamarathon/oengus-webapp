@@ -39,11 +39,6 @@ describe('LoginComponent', () => {
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('lowercases username before login', () => {
     component.loginData = { username: 'Duncte123', password: 'secret', twoFactorCode: '' };
     authServiceStub.performLogin.mockReturnValue(of({ status: LoginResponseStatus.MFA_REQUIRED, token: null }));

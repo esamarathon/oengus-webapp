@@ -33,11 +33,6 @@ describe('MarathonScheduleExportComponent', () => {
     component.scheduleId = 1;
     component.disabled = false;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('formats includes ics, csv, json, gdq', () => {
     expect(component.formats).toEqual(['ics', 'csv', 'json', 'gdq']);
   });

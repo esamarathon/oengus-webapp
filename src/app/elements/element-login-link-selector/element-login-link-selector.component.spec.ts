@@ -18,11 +18,6 @@ describe('ElementLoginLinkSelectorComponent', () => {
   afterEach(() => {
     localStorage.clear();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('storeCurrentLocation stores pathname in localStorage', () => {
     Object.defineProperty(window, 'location', { value: { pathname: '/marathon/bsm2025' }, configurable: true });
 

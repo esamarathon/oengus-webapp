@@ -20,11 +20,6 @@ describe('SubmissionRowComponent', () => {
     fixture = TestBed.createComponent(SubmissionRowComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('selectedAvailabilities defaults to empty array', () => {
     expect(component.selectedAvailabilities).toEqual([]);
   });

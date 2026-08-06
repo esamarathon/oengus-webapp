@@ -20,11 +20,6 @@ describe('SubmissionCategoryComponent', () => {
     component.category = makeCategory();
     component.showDelete = false;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('safeStatus', () => {
     it('returns rawStatus when set', () => {
       component.rawStatus = 'VALIDATED';

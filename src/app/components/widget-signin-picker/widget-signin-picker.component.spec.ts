@@ -26,11 +26,6 @@ describe('WidgetSigninPickerComponent', () => {
   afterEach(() => {
     localStorage.clear();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('dropdownItemClass returns dropdown-item for DROPDOWN type', () => {
     component.type = 'DROPDOWN';
     expect(component.dropdownItemClass).toBe('dropdown-item');

@@ -47,11 +47,6 @@ describe('ProfileComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('sets user from route data', () => {
     expect(component.user).toBe(testUser);
   });

@@ -21,12 +21,6 @@ describe('RunDetailsComponent', () => {
     fixture = TestBed.createComponent(RunDetailsComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    component.run = { setupBlock: false, game: 'Portal' } as any;
-    expect(component).toBeTruthy();
-  });
-
   it('titleText returns game name when not a setup block', () => {
     const gameName = faker.commerce.productName();
     component.run = { setupBlock: false, game: gameName } as any;

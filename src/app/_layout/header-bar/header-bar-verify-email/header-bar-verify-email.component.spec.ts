@@ -29,11 +29,6 @@ describe('HeaderBarVerifyEmailComponent', () => {
     fixture = TestBed.createComponent(HeaderBarVerifyEmailComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('show', () => {
     it('returns falsy when user is null', () => {
       userServiceStub.user = null;

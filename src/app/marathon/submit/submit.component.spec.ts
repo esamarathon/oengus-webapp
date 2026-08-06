@@ -75,11 +75,6 @@ describe('SubmitComponent', () => {
     fixture = TestBed.createComponent(SubmitComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('maxCategoriesPerGame returns value from marathon', () => {
     marathonServiceStub.marathon.maxCategoriesPerGame = 4;
 

@@ -23,11 +23,6 @@ describe('SubmitShareButtonsComponent', () => {
     component = fixture.componentInstance;
     component.gameNames = 'Celeste, Hollow Knight';
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('marathonName returns marathon name', () => {
     expect(component.marathonName).toBe('BSM 2025');
   });

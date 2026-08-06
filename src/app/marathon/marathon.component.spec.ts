@@ -43,11 +43,6 @@ describe('MarathonComponent', () => {
     fixture = TestBed.createComponent(MarathonComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('isAdmin delegates to marathonService.isAdmin', () => {
     marathonServiceStub.isAdmin.mockReturnValue(true);
 

@@ -17,11 +17,6 @@ describe('ElementPasswordInputComponent', () => {
     fixture = TestBed.createComponent(ElementPasswordInputComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('defaults password to hidden', () => {
     expect(component.passwordHidden).toBe(true);
   });

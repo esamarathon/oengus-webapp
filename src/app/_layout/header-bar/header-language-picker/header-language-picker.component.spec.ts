@@ -33,11 +33,6 @@ describe('HeaderLanguagePickerComponent', () => {
     fixture = TestBed.createComponent(HeaderLanguagePickerComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('usableLocales returns available locale names', () => {
     expect(component.usableLocales).toEqual(['en', 'fr', 'nl']);
   });

@@ -34,11 +34,6 @@ describe('CreateComponent (schedule-management)', () => {
     fixture = TestBed.createComponent(CreateComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('reads marathonId from route snapshot', () => {
     expect(component.marathonId).toBe('bsm2025');
   });

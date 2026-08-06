@@ -18,11 +18,6 @@ describe('UserLinkComponent', () => {
     fixture = TestBed.createComponent(UserLinkComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('userId', () => {
     it('returns user.username when user is set', () => {
       const user = makeBasicUserInfo();

@@ -23,11 +23,6 @@ describe('IncentiveSettingsComponent', () => {
     component.marathon = makeMarathon();
     component.donationsQuestions = [];
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('disabled defaults to undefined', () => {
     expect(component.disabled).toBeUndefined();
   });

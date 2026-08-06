@@ -41,11 +41,6 @@ describe('OverviewComponent (schedule-management)', () => {
     fixture = TestBed.createComponent(OverviewComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('loads schedules from route data', () => {
     expect(component.schedules).toHaveLength(2);
     expect(component.schedules[0].name).toBe('Main');

@@ -20,11 +20,6 @@ describe('DescriptionEditorComponent', () => {
     fixture = TestBed.createComponent(DescriptionEditorComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('previewActive defaults to false', () => {
     expect(component.previewActive).toBe(false);
   });

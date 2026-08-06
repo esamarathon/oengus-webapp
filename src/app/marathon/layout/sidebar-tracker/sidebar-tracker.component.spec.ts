@@ -22,11 +22,6 @@ describe('SidebarTrackerComponent', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('marathonId returns the marathon id', () => {
     component.marathon = makeMarathon({ id: 'test-marathon' });
     expect(component.marathonId).toBe('test-marathon');

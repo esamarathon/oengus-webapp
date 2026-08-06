@@ -30,14 +30,6 @@ describe('GameEditorComponent', () => {
     fixture = TestBed.createComponent(GameEditorComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', async () => {
-    component.inputGame = makeSavedGame();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    expect(component).toBeTruthy();
-  });
-
   it('sets editing to true for new games (id < 1)', async () => {
     component.inputGame = makeSavedGame({ id: -1 });
     fixture.detectChanges();

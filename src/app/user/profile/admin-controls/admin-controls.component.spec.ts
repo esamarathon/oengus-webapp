@@ -21,11 +21,6 @@ describe('AdminControlsComponent', () => {
     fixture = TestBed.createComponent(AdminControlsComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('openAdminDialog emits openDialog event', () => {
     const spy = vi.fn();
     component.openDialog.subscribe(spy);

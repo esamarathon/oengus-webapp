@@ -42,11 +42,6 @@ describe('SubmissionLazyLoaderComponent', () => {
     component.nextSubmissionPage = nextPageSubject;
     component.doInitialLoad = false;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('submissions$ starts empty', () => {
     expect(component.submissions$.getValue()).toEqual([]);
   });

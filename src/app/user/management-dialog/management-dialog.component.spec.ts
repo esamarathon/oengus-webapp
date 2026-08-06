@@ -44,11 +44,6 @@ describe('ManagementDialogComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('fetches roles on init', () => {
     expect(userServiceStub.fetchRoles).toHaveBeenCalledWith(testUser.id);
   });

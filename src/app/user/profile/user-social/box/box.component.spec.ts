@@ -18,11 +18,6 @@ describe('BoxComponent', () => {
     fixture = TestBed.createComponent(BoxComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('usernameFormatted', () => {
     it('returns raw username when no formatter exists', () => {
       const account = new SocialAccount();

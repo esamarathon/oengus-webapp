@@ -772,7 +772,7 @@ then `whenStable()` waits for async operations to settle. 7 files updated:
 
 Add `localStorage.clear()` to `beforeEach` in both files and remove the manual `removeItem` cleanup lines.
 
-### Step 15 — Remove bare `expect(component).toBeTruthy()` smoke tests
+### Step 15 — Remove bare `expect(component).toBeTruthy()` smoke tests ✅
 §7 says "meaningful assertions (behavior), not just `expect(component).toBeTruthy()`". 80 spec files have a bare creation test as their first `it` block. These provide no value beyond what TestBed already guarantees (it throws if creation fails). Remove the `it('creates the component', …)` blocks from files that already have other behavioral assertions.
 
 ---

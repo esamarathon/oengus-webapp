@@ -50,11 +50,6 @@ describe('SelectionComponent', () => {
     fixture = TestBed.createComponent(SelectionComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('getSelectColor', () => {
     it('returns is-warning for TODO', () => {
       expect(component.getSelectColor('TODO')).toBe('is-warning');

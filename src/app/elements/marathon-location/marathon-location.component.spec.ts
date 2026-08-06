@@ -18,11 +18,6 @@ describe('MarathonLocationComponent', () => {
     component = fixture.componentInstance;
     component.marathon = makeMarathon();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('hasCountry returns true when onsite and country is set', () => {
     component.marathon = makeMarathon({ onsite: true, country: 'NL' });
     expect(component.hasCountry).toBe(true);

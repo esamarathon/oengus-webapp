@@ -22,11 +22,6 @@ describe('DetailsComponent', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('isLive', () => {
     it('returns false when marathon is falsy', () => {
       component.marathon = undefined as any;

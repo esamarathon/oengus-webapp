@@ -20,11 +20,6 @@ describe('CalendarControllerComponent', () => {
     component.year = 2025;
     component.month = 6;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('previousCalendar', () => {
     it('decrements month within same year', () => {
       component.year = 2025;

@@ -18,11 +18,6 @@ describe('SavedGamesComponent', () => {
     component = fixture.componentInstance;
     component.games = [];
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('getSpan returns span based on category count', () => {
     const game = makeSavedGame({ categories: [makeSavedCategory(), makeSavedCategory(), makeSavedCategory()] });
     expect(component.getSpan(game)).toBe('span 3');

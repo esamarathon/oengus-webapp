@@ -46,11 +46,6 @@ describe('SavedGamesSettingsComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('fetches supporter status on init', () => {
     expect(component.isSupporter).toBe(true);
   });

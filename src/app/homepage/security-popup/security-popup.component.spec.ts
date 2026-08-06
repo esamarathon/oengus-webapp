@@ -22,11 +22,6 @@ describe('SecurityPopupComponent', () => {
   afterEach(() => {
     Object.defineProperty(document, 'cookie', { value: '', writable: true, configurable: true });
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('sets open to true when cookie is not present', () => {
     document.cookie = '';
     component.ngOnInit();

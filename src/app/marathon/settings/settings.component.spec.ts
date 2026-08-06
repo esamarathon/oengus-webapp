@@ -57,11 +57,6 @@ describe('SettingsComponent (marathon)', () => {
     fixture.detectChanges();
     await fixture.whenStable();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('ngOnInit populates settings from route data', () => {
     expect(component.settings).toBeDefined();
     expect(component.settings.defaultSetupTimeHuman).toBe('00:10:00');

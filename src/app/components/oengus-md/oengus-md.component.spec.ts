@@ -22,11 +22,6 @@ describe('OengusMdComponent', () => {
     fixture = TestBed.createComponent(OengusMdComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('markdownText returns empty string for falsy data', () => {
     component.data = '';
     expect(component.markdownText).toBe('');

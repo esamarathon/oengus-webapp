@@ -19,11 +19,6 @@ describe('SubmissionComponent', () => {
     component = fixture.componentInstance;
     component.submissions = [];
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('getSpan', () => {
     it('returns span count for a marathon element', () => {
       const cat1 = makeHistoryGameCategory();

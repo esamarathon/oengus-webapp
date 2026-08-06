@@ -43,11 +43,6 @@ describe('GeneralSettingsComponent', () => {
     component.settings = { webhook: '' } as any;
     component.moderators = [];
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('currentUserIsOwner returns true when user id matches creator', () => {
     expect(component.currentUserIsOwner).toBe(true);
   });

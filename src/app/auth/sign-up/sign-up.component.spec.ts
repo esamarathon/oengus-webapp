@@ -29,11 +29,6 @@ describe('SignUpComponent', () => {
     fixture = TestBed.createComponent(SignUpComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('lowercases username on submit', async () => {
     component.data.username = 'Duncte123';
     component.data.email = 'test@example.com';

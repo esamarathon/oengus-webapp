@@ -32,11 +32,6 @@ describe('SubmissionSettingsComponent', () => {
     component.settings = makeMarathon() as any;
     component.submissionsQuestions = [];
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('checkDiscordStatus clears guild info when discordRequired is false', () => {
     component.settings.discordRequired = false;
     component.settings.discordGuildId = 'old';

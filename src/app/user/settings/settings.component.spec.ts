@@ -61,11 +61,6 @@ describe('SettingsComponent', () => {
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('getUsernameByConnectionType finds existing connection', () => {
     expect(component.getUsernameByConnectionType('TWITCH')).toBe(twitchUsername);
   });

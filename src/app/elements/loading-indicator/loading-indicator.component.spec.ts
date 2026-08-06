@@ -14,11 +14,6 @@ describe('LoadingIndicatorComponent', () => {
     fixture = TestBed.createComponent(LoadingIndicatorComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('defaults loading to true', () => {
     expect(component.loading).toBe(true);
   });

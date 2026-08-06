@@ -31,11 +31,6 @@ describe('DonationsComponent', () => {
     fixture = TestBed.createComponent(DonationsComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('loads donations and stats from route data', () => {
     expect(component.donations).toEqual({ content: [], totalElements: 0 });
     expect(component.stats).toEqual({ total: 1234.56 });

@@ -31,11 +31,6 @@ describe('SubmitMultiplayerJoinComponent', () => {
     fixture = TestBed.createComponent(SubmitMultiplayerJoinComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('getMultiplayerSubmission emits opponent on success', async () => {
     const opponent = { id: 1, user: { username: 'duncte123' } };
     categoryServiceStub.getFromCode.mockReturnValue(of(opponent));

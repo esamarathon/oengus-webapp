@@ -18,13 +18,6 @@ describe('SidebarModeratorsComponent', () => {
     fixture = TestBed.createComponent(SidebarModeratorsComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    const creator = makeBasicUserInfo({ username: 'duncte123' });
-    component.marathon = makeMarathon({ creator, moderators: [] });
-    expect(component).toBeTruthy();
-  });
-
   it('populates moderators with creator and marathon moderators on init', () => {
     const creator = makeBasicUserInfo({ username: 'duncte123' });
     const mod1 = makeBasicUserInfo({ username: 'mod_one' });

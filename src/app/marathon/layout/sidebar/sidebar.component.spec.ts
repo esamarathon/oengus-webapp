@@ -20,11 +20,6 @@ describe('SidebarComponent', () => {
     component = fixture.componentInstance;
     component.marathon = makeMarathon();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('isActiveClass returns is-active true when not collapsed', () => {
     component.collapsed = false;
 

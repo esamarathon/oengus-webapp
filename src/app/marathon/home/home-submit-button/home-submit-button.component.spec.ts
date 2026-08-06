@@ -29,11 +29,6 @@ describe('HomeSubmitButtonComponent', () => {
     component = fixture.componentInstance;
     component.marathon = makeMarathon();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('loggedIn', () => {
     it('returns false when user is null', () => {
       userServiceStub.user = null;

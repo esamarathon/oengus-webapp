@@ -29,11 +29,6 @@ describe('PasswordResetComponent', () => {
     fixture = TestBed.createComponent(PasswordResetComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('ngOnInit', () => {
     it('sets resetToken from route params and clears error', () => {
       component.ngOnInit();

@@ -37,11 +37,6 @@ describe('MarathonScheduleListComponent', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('shouldShowDay', () => {
     it('returns true for index 0', () => {
       expect(component.shouldShowDay(0)).toBe(true);

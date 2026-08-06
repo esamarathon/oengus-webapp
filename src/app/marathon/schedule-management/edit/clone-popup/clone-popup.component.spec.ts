@@ -40,11 +40,6 @@ describe('ClonePopupComponent', () => {
     component.selfId = 2;
     component.ngOnInit();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('open defaults to false', () => {
     expect(component.open).toBe(false);
   });

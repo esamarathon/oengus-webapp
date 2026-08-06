@@ -17,11 +17,6 @@ describe('ConnectionComponent', () => {
     fixture = TestBed.createComponent(ConnectionComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('profileLink', () => {
     it('returns mastodon URL for MASTODON platform', () => {
       const account = new SocialAccount();

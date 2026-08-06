@@ -33,11 +33,6 @@ describe('NewMarathonComponent', () => {
     component = fixture.componentInstance;
     component.ngOnInit();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('ngOnInit creates a new Marathon', () => {
     expect(component.marathon).toBeDefined();
   });

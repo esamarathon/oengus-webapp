@@ -32,11 +32,6 @@ describe('DonateComponent', () => {
     fixture = TestBed.createComponent(DonateComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('addLink adds a new Link', () => {
     component.links = [];
 

@@ -20,11 +20,6 @@ describe('DescriptionComponent', () => {
     component = fixture.componentInstance;
     component.marathon = makeMarathon();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('accepts marathon input', () => {
     const marathon = makeMarathon({ description: 'A test marathon' });
     component.marathon = marathon;

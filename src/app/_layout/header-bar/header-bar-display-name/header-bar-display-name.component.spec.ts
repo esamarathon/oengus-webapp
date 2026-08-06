@@ -24,11 +24,6 @@ describe('HeaderBarDisplayNameComponent', () => {
     fixture = TestBed.createComponent(HeaderBarDisplayNameComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('returns falsy when user is null', () => {
     userServiceStub.user = null;
     expect(component.isMissingDisplayName).toBeFalsy();

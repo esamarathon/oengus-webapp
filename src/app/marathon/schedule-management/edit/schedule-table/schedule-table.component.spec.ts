@@ -41,11 +41,6 @@ describe('ScheduleTableComponent', () => {
     fixture = TestBed.createComponent(ScheduleTableComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('shouldShowDay', () => {
     it('returns true for index 0', () => {
       component.lines = [makeLine()];

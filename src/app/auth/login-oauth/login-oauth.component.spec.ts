@@ -44,11 +44,6 @@ describe('LoginOauthComponent', () => {
     fixture = TestBed.createComponent(LoginOauthComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('loginTo navigates home on LOGIN_SUCCESS', async () => {
     const user = makeUser({ email: 'duncte123@example.com' });
     userServiceStub.me.mockReturnValue({ add: (cb: () => void) => { userServiceStub.user = user; cb(); } });

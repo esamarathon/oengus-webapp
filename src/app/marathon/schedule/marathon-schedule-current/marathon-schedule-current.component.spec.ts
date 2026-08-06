@@ -27,11 +27,6 @@ describe('MarathonScheduleCurrentComponent', () => {
     fixture = TestBed.createComponent(MarathonScheduleCurrentComponent);
     component = fixture.componentInstance;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('when isNext is false (current run)', () => {
     beforeEach(() => {
       component.isNext = false;

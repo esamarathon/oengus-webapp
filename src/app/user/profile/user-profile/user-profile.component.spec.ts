@@ -23,11 +23,6 @@ describe('UserProfileComponent', () => {
     component = fixture.componentInstance;
     component.user = testUser;
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('avatarUrl uses username from environment api', () => {
     expect(component.avatarUrl).toContain(`/v2/users/${testUser.username}/avatar`);
   });

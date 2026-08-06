@@ -23,11 +23,6 @@ describe('WarningModalComponent', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-
-  it('creates the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('sets buttonLoading to true on init', () => {
     component.ngOnInit();
     expect(component.buttonLoading).toBe(true);
