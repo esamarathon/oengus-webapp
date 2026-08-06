@@ -13,6 +13,7 @@ describe('ScheduleService', () => {
   let temporalStub: { parseDate: ReturnType<typeof vi.fn>; timeZone: { timeZone: string } };
 
   beforeEach(() => {
+    localStorage.clear();
     temporalStub = {
       parseDate: vi.fn((val: string) =>
         Temporal.Instant.from(val).toZonedDateTimeISO('UTC')
@@ -171,8 +172,6 @@ describe('ScheduleService', () => {
       expect(url).toContain('format=csv');
       expect(url).toContain('zoneId=Europe/Amsterdam');
       expect(url).toContain('locale=nl');
-
-      localStorage.removeItem('language');
     });
   });
 

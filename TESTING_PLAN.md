@@ -765,7 +765,7 @@ then `whenStable()` waits for async operations to settle. 7 files updated:
 - `src/app/user/profile/profile-history/profile-history.component.spec.ts`
 - `src/app/user/management-dialog/management-dialog.component.spec.ts`
 
-### Step 14 — Isolate `localStorage` properly in service specs
+### Step 14 — Isolate `localStorage` properly in service specs ✅
 §4 requires `localStorage.clear()` in `beforeEach` for specs that touch localStorage. Two files use manual `setItem`/`removeItem` without `clear()`:
 - `src/services/game.service.spec.ts`
 - `src/services/schedule.service.spec.ts`

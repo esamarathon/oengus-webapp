@@ -17,6 +17,7 @@ describe('GameService', () => {
   let translateStub: { get: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    localStorage.clear();
     translateStub = { get: vi.fn().mockReturnValue(of('translated')) };
 
     TestBed.configureTestingModule({
@@ -67,8 +68,6 @@ describe('GameService', () => {
       expect(req.request.method).toBe('GET');
       expect(req.request.responseType).toBe('text');
       req.flush('col1,col2\nval1,val2');
-
-      localStorage.removeItem('language');
     });
   });
 });
