@@ -731,6 +731,9 @@ Each service gets its own commit:
 - `marathon/incentive/**`, `marathon/incentive-management/**`
 - `marathon/new-marathon/**`, `marathon/marathon.component.spec.ts`
 
+### Step 11 — Factories cleanup
+The file with all the factories has gotten quite large. It should be split up in logical files to reduce file size and congnitive load.
+
 ---
 
 ## 7. Per-Step "Definition of Done"
