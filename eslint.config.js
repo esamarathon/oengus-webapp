@@ -10,6 +10,7 @@ module.exports = tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/e2e/**',
+      '**/*.spec.ts',
     ],
   },
   {

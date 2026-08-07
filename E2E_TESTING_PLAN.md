@@ -34,11 +34,12 @@
 
 ```bash
 npm install --save-dev @playwright/test
-npx playwright install --with-deps
+npx playwright install --with-deps chromium firefox
 ```
 
-This installs the Playwright test runner and downloads browser binaries
-(Chromium, Firefox, WebKit).
+This installs the Playwright test runner and downloads only the browser binaries
+we actually use — **Chromium and Firefox**. WebKit is intentionally **not**
+installed, since no project targets it (see §2.3).
 
 Reference: https://playwright.dev/docs/intro#installing-playwright
 
@@ -52,6 +53,7 @@ e2e/
 │   └── auth.ts                  # Authenticated user fixture
 ├── mocks/
 │   ├── handlers.ts              # Default mock route handlers (global)
+│   ├── mock-api.ts              # Per-test MockApi helper (concise overrides)
 │   ├── data/                    # Mock response data factories
 │   │   ├── marathon.ts
 │   │   ├── user.ts
@@ -99,6 +101,12 @@ export default defineConfig({
     baseURL: 'http://localhost:4200',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Pin locale + timezone for determinism. The app localizes routes via
+    // @oengusio/ngx-translate-router (default 'en-GB', alwaysSetPrefix: false),
+    // so forcing en-GB keeps URLs unprefixed and text in English. UTC keeps
+    // rendered dates/times (schedules, countdowns) stable across machines/CI.
+    locale: 'en-GB',
+    timezoneId: 'UTC',
   },
 
   projects: [
@@ -143,16 +151,19 @@ Create `e2e/tsconfig.json`:
     "moduleResolution": "bundler",
     "strict": true,
     "noEmit": true,
-    "types": ["node"],
-    "paths": {
-      "@mocks/*": ["./mocks/*"],
-      "@fixtures/*": ["./fixtures/*"],
-      "@pages/*": ["./pages/*"]
-    }
+    "types": ["node"]
   },
   "include": ["**/*.ts"]
 }
 ```
+
+> **No path aliases.** We deliberately omit a `paths` block and use relative
+> imports (e.g. `import { test } from '../fixtures/base'`). TypeScript `paths`
+> only affect *type-checking* — they don't rewrite the emitted JS, and
+> Playwright's runtime does not read tsconfig `paths` without an extra resolver,
+> so aliases would resolve in the editor but fail at runtime. (`baseUrl` isn't
+> required for `paths` since TS 4.1 and is discouraged outside AMD loaders
+> anyway.)
 
 ### 2.5 Package.json scripts
 
@@ -165,6 +176,10 @@ Add these scripts:
 "e2e:report": "npx playwright show-report e2e/playwright-report"
 ```
 
+> **Note:** `package.json` already defines `"e2e": "ng e2e"`. This intentionally
+> **replaces** it — the project is standardizing on Playwright, and the Angular
+> `ng e2e` builder is not used.
+
 ### 2.6 .gitignore additions
 
 ```
@@ -172,6 +187,18 @@ e2e/test-results/
 e2e/playwright-report/
 e2e/.auth/
 ```
+
+### 2.7 ESLint and e2e (intentionally not linted)
+
+`eslint.config.js` already ignores `**/e2e/**` and only lints `src/**`. **Keep it
+that way on purpose** — the e2e tests are deliberately excluded from linting,
+which avoids extra config (Playwright/TypeScript ESLint rules, separate tsconfig
+wiring) and day-to-day lint churn. **No ESLint changes are required** for e2e, and
+`npm run lint` (the CI `lint_code` gate) continues to cover only `src/**`.
+
+Trade-off: issues ESLint would normally catch in test code (e.g. a missing
+`await` on an assertion) won't be flagged by the linter — rely on code review and
+the e2e run itself to catch them.
 
 ---
 
@@ -184,7 +211,10 @@ Reference: https://playwright.dev/docs/mock
 
 ### 3.1 Design principles
 
-1. **All API calls are mocked globally** — tests never hit a real backend.
+1. **All API calls are mocked globally** — tests never hit a real backend. The
+   e2e container runs without internet access, so any un-mocked `/api/**` request
+   throws and fails the test (see the catch-all in §3.2) rather than silently
+   returning an error response.
 2. **Global mocks use `context.route()`** — applies to all pages in the test
    context, including popups and navigated links.
 3. **Per-test overrides use `page.route()`** — page-level routes take precedence
@@ -206,23 +236,29 @@ import { faker } from '@faker-js/faker';
  * Tests that need different data override specific routes via page.route().
  */
 export async function registerGlobalMocks(context: BrowserContext): Promise<void> {
-  // Catch-all: any unhandled /api/** request returns 404
+  // Catch-all: any unhandled /api/** request is a test bug. The e2e container
+  // has no internet access, so an un-mocked API call can never succeed — fail
+  // loudly instead of silently returning a 404 that hides the missing mock.
+  // Registered FIRST so specific handlers (registered later) take precedence.
   await context.route('**/api/**', async (route) => {
-    await route.fulfill({
-      status: 404,
-      json: { error: 'No mock registered for this endpoint' },
-    });
+    throw new Error(
+      `Un-mocked API call: ${route.request().method()} ${route.request().url()}`,
+    );
   });
 
-  // User: not logged in by default
-  await context.route('**/api/v2/users/@me*', async (route) => {
+  // User: not logged in by default.
+  // NOTE: match @me EXACTLY (no trailing `*`) — a greedy `@me*` glob would also
+  // capture sub-resources like `/api/v2/users/@me/saved-games` and wrongly 401 them.
+  await context.route('**/api/v2/users/@me', async (route) => {
     await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
   });
 
-  // Marathon list (homepage)
-  await context.route('**/api/v1/marathons*', async (route) => {
+  // Homepage metadata (the homepage does NOT call /api/v1/marathons — it calls
+  // the v2 "for-home" endpoint, which returns server-bucketed marathon arrays).
+  // Shape must match HomepageMetaDataRaw: { next, open, live }.
+  await context.route('**/api/v2/marathons/for-home', async (route) => {
     await route.fulfill({
-      json: [],
+      json: { next: [], open: [], live: [] },
     });
   });
 
@@ -244,14 +280,26 @@ export async function registerGlobalMocks(context: BrowserContext): Promise<void
 
 ```typescript
 import { test as base, expect } from '@playwright/test';
+import { faker } from '@faker-js/faker';
 import { registerGlobalMocks } from '../mocks/handlers';
+import { MockApi } from '../mocks/mock-api';
 
-export const test = base.extend({
-  // Auto-fixture: registers global mocks on every test's context
-  mockApi: [async ({ context }, use) => {
+export const test = base.extend<{ mockApi: MockApi; globalMocks: void }>({
+  // Auto-fixture: seed faker + register global mocks on every test's context
+  globalMocks: [async ({ context }, use) => {
+    // Seed faker per-test for reproducibility. Random-but-deterministic data
+    // means a failing run can be reproduced exactly (check the seed in the
+    // report), instead of flaking on values that change every run.
+    faker.seed(20260807);
     await registerGlobalMocks(context);
     await use();
   }, { auto: true }],
+
+  // Per-test helper for concise response overrides (see §3.5). Injected into
+  // every test as `mockApi`.
+  mockApi: async ({ page }, use) => {
+    await use(new MockApi(page));
+  },
 });
 
 export { expect };
@@ -285,13 +333,19 @@ export const test = base.extend({
       window.localStorage.setItem('token', token);
     }, fakeToken);
 
-    // Override the /users/@me route to return a logged-in user
+    // Override the /users/@me route to return a logged-in user.
+    // IMPORTANT (verified against AppComponent + UserService.me()):
+    //  - `email` MUST be present and non-empty, otherwise the app redirects to
+    //    `/user/new` on load.
+    //  - `enabled` MUST be true, otherwise the app logs the user out and toasts
+    //    "disabled account".
     await page.route('**/api/v2/users/@me', async (route) => {
       await route.fulfill({
         json: {
           id: payload.sub,
           username: payload.username,
           displayName: faker.person.fullName(),
+          email: faker.internet.email(),
           enabled: true,
           roles: ['ROLE_USER'],
           languagesSpoken: ['en'],
@@ -300,43 +354,151 @@ export const test = base.extend({
     });
 
     await use(page);
-  },
+```
+
+**Verified auth bootstrap** (so this fixture actually logs the user in):
+`AppComponent`'s constructor runs `if (!userService.user && userService.token)
+{ userService.me(); }`. `token` is read from `localStorage` (key `token`), and
+`me()` issues `GET /api/v2/users/@me`. Crucially, the token's `exp` is **not**
+validated at bootstrap, so the fake token only needs to *exist* — setting
+`localStorage.token` + mocking `@me` is sufficient. (`exp` is still set to a
+future time for any code path that decodes it later.)
 });
 
 export { expect } from './base';
 ```
 
-### 3.5 Per-test mock override pattern
+### 3.5 Per-test mock overrides — the `mockApi` helper
 
-Tests override specific endpoints using `page.route()`. Because page-level
-routes take precedence over context-level routes, the global mock is effectively
-replaced for that one test:
+Raw `page.route(...)` + `route.fulfill(...)` is verbose. The `mockApi` fixture
+(injected into every test) wraps it so a test declares a response in one line.
+
+`e2e/mocks/mock-api.ts`:
+
+```typescript
+import { Page, Route } from '@playwright/test';
+
+export interface MockResponse {
+  status?: number;                 // defaults to 200
+  json?: unknown;
+  body?: string;
+  headers?: Record<string, string>;
+}
+
+type Responder = MockResponse | ((route: Route) => MockResponse | Promise<MockResponse>);
+
+export class MockApi {
+  constructor(private readonly page: Page) {}
+
+  /** Any HTTP method. `path` may be a full glob or a short API path like '/v2/...'. */
+  on(path: string, responder: Responder): Promise<void> {
+    return this.register(undefined, path, responder);
+  }
+
+  get(path: string, responder: Responder) { return this.register('GET', path, responder); }
+  post(path: string, responder: Responder) { return this.register('POST', path, responder); }
+  put(path: string, responder: Responder) { return this.register('PUT', path, responder); }
+  patch(path: string, responder: Responder) { return this.register('PATCH', path, responder); }
+  delete(path: string, responder: Responder) { return this.register('DELETE', path, responder); }
+
+  private async register(method: string | undefined, path: string, responder: Responder) {
+    await this.page.route(toGlob(path), async (route) => {
+      if (method && route.request().method() !== method) {
+        return route.fallback();   // wrong verb → let other handlers try
+      }
+      const res = typeof responder === 'function' ? await responder(route) : responder;
+      await route.fulfill({
+        status: res.status ?? 200,
+        json: res.json,
+        body: res.body,
+        headers: res.headers,
+      });
+    });
+  }
+}
+
+// Accepts a full Playwright glob (already starting with '**'), or expands a
+// short API path like '/v2/marathons' into a full '/api/...' glob.
+function toGlob(path: string): string {
+  if (path.startsWith('**')) return path;
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `**/api${p}`;
+}
+```
+
+Usage — one line per endpoint:
 
 ```typescript
 import { test, expect } from '../../fixtures/base';
 import { faker } from '@faker-js/faker';
 
-test('displays marathon details', async ({ page }) => {
-  const marathonId = faker.string.alphanumeric(5);
-  const marathonName = faker.company.name();
+test('displays marathon details', async ({ page, mockApi }) => {
+  const id = faker.string.alphanumeric(5);
+  const name = faker.company.name();
 
-  // Override the specific marathon endpoint for this test
-  await page.route(`**/api/v1/marathons/${marathonId}`, async (route) => {
-    await route.fulfill({
-      json: {
-        id: marathonId,
-        name: marathonName,
-        startDate: '2026-09-01T12:00:00Z',
-        endDate: '2026-09-03T12:00:00Z',
-        submissionsOpen: true,
-      },
-    });
+  await mockApi.get(`/v1/marathons/${id}`, {
+    json: {
+      id, name,
+      startDate: '2026-09-01T12:00:00Z',
+      endDate: '2026-09-03T12:00:00Z',
+      submissionsOpen: true,
+    },
   });
 
-  await page.goto(`/marathon/${marathonId}`);
-  await expect(page.getByRole('heading', { name: marathonName })).toBeVisible();
+  await page.goto(`/marathon/${id}`);
+  await expect(page.getByRole('heading', { name })).toBeVisible();
 });
 ```
+
+Error and request-derived responses stay just as terse:
+
+```typescript
+// Error state
+await mockApi.get('/v2/marathons/for-home', { status: 500, json: { error: 'boom' } });
+
+// Response derived from the request
+await mockApi.post('/v2/marathons', () => ({
+  status: 201,
+  json: { id: faker.string.alphanumeric(5) },
+}));
+```
+
+Non-GET verbs (`post`, `put`, `patch`, `delete`) work identically. Method
+matching is enforced — a request whose verb doesn't match calls `route.fallback()`,
+so it won't accidentally match and instead falls through to other handlers (or
+the hard-fail catch-all):
+
+```typescript
+// POST — return a created resource (201)
+await mockApi.post('/v2/marathons', { status: 201, json: { id: 'abc123' } });
+
+// DELETE — return 204 No Content
+await mockApi.delete(`/v1/marathons/${id}`, { status: 204 });
+
+// One endpoint, multiple verbs — register each; they're method-scoped and coexist
+await mockApi.get(`/v1/marathons/${id}`, { json: { id, name } });
+await mockApi.delete(`/v1/marathons/${id}`, { status: 204 });
+```
+
+To **assert a write actually happened** (with the expected body), pair the mock
+with `waitForRequest`:
+
+```typescript
+const created = page.waitForRequest(
+  (r) => r.url().includes('/api/v2/marathons') && r.method() === 'POST',
+);
+
+await mockApi.post('/v2/marathons', { status: 201, json: { id: 'abc123' } });
+
+// ... trigger the UI action that submits the form ...
+
+const req = await created;
+expect(req.postDataJSON()).toMatchObject({ name: 'My Marathon' });
+```
+
+Because these register `page.route` handlers, they take precedence over the
+context-level global mocks (see §3.6), and the latest registration wins — so a
+test can freely override a default.
 
 Reference: https://playwright.dev/docs/mock#mock-api-requests
 
@@ -445,6 +607,8 @@ Reference: https://playwright.dev/docs/best-practices#use-web-first-assertions
 
 ### 5.4 Mock data
 - Use `@faker-js/faker` for all generated data (same as unit tests)
+- Faker is **seeded** in the base fixture (§3.3) so data is random but
+  deterministic — reproducible failures, no flaky assertions on changing values
 - Mock response shapes must match the actual API contracts
 - Factor reusable response builders into `e2e/mocks/data/`
 
@@ -465,16 +629,33 @@ Reference: https://playwright.dev/docs/best-practices#avoid-testing-third-party-
 
 ## 6. Execution Order — Small Steps
 
-Each step is independently mergeable. Keep the suite green after every step.
+Each step is independently mergeable. Keep the suite green after every step —
+"green" means **`npm run lint`, `npm run test:ci`, and `npm run e2e` all pass**
+(these are the checks the CI `lint_code` job runs). Note `npm run lint` does not
+cover the `e2e/` files by design (see §2.7), so it won't fail on test code.
+
+### Step 0 — Selector audit (prerequisite)
+The example locators throughout this plan (e.g. `getByRole('heading', { name })`,
+`getByRole('link', { name: /submit/i })`) are **illustrative, not verified**. The
+app currently has **no `data-testid` attributes**, and its Bulma-based markup does
+not always expose accessible roles/names. Before writing assertions:
+- Audit the screens each step touches (homepage, marathon detail, schedule,
+  submission form, profile/settings).
+- Prefer fixing/adding real ARIA roles and accessible names where cheap.
+- Where a user-facing locator isn't practical, add a stable `data-testid` to the
+  template as part of the same change.
+- Treat the example selectors in this document as starting points to be replaced
+  with verified ones.
 
 ### Step 1 — Scaffold & hello world
 - Install `@playwright/test`
-- Create `e2e/playwright.config.ts`
+- Create `playwright.config.ts` at the **project root** (matches `testDir: './e2e'`)
 - Create `e2e/tsconfig.json`
 - Create `e2e/fixtures/base.ts` with global mocking fixture
 - Create `e2e/mocks/handlers.ts` with minimal catch-all handler
 - Write one smoke test (`homepage.spec.ts`) that verifies the app loads
-- Add npm scripts (`e2e`, `e2e:ui`, `e2e:headed`, `e2e:report`)
+- Add npm scripts (`e2e`, `e2e:ui`, `e2e:headed`, `e2e:report`) — note this
+  replaces the existing `"e2e": "ng e2e"` script (intentional; see §2.5)
 - Add entries to `.gitignore`
 - Verify: `npm run e2e` passes
 
@@ -484,9 +665,12 @@ Each step is independently mergeable. Keep the suite green after every step.
 - Write tests: login page renders, authenticated user sees their username in header
 
 ### Step 3 — Homepage & marathon list
-- Add global mock for marathon list endpoint
-- Create `e2e/mocks/data/marathon.ts` factory
-- Write tests: homepage displays marathon cards, empty state, upcoming/live filters
+- Add global mock for the homepage metadata endpoint
+  (`GET /api/v2/marathons/for-home`, returns `{ next, open, live }` arrays)
+- Create `e2e/mocks/data/marathon.ts` factory (builds `MarathonRaw` objects)
+- Write tests: homepage displays marathon cards for each bucket (next/open/live),
+  empty state when all buckets are empty. Note: bucketing is decided by the
+  server response, not by client-side time, so no clock control is needed here.
 
 ### Step 4 — Marathon detail page
 - Create `MarathonPage` page object
@@ -512,15 +696,61 @@ Each step is independently mergeable. Keep the suite green after every step.
 - Test empty states (no submissions, no schedule)
 
 ### Step 9 — CI integration
-- Add Playwright to CI pipeline (GitHub Actions or equivalent)
-- Configure single-browser (Chromium) for CI speed
-- Upload test artifacts (traces, screenshots) on failure
+Extend the existing workflow `.github/workflows/build-image.yml`. Its `lint_code`
+job already runs `checkout → setup node (22.x) → npm install → npm run lint →
+npm run test:ci`. Add the e2e steps to that job, after the `run unit tests` step:
+
+```yaml
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run e2e tests
+        run: npx playwright test --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14
+```
+
+Notes:
+- Only Chromium runs in CI (one browser keeps the run short); Firefox runs locally.
+- `--with-deps` installs OS-level dependencies (libs needed by Chromium on Ubuntu).
+- The report artifact uploads on failure **or** success (`!cancelled()`) so
+  results are always inspectable.
+- The existing `Install deps` step (`npm install`) already installs
+  `@playwright/test` once it's added to devDependencies in Step 1.
+- The Playwright `webServer` config starts `npm run dev` automatically, so no
+  separate "start server" step is required. Because all API calls are mocked and
+  the runner has no internet access, no backend is needed.
+
+---
+
+### Future coverage (backlog)
+Steps 1–9 cover the core visitor + basic authenticated flows. The following
+larger surfaces are intentionally out of the initial scope and should be planned
+as later phases (each likely needs its own mocks, and some need admin/mod
+fixtures or feature-flag builds):
+- **Admin / organizer:** marathon creation & editing, settings, moderator
+  management, moderation actions.
+- **Schedule editing:** the `vis-timeline` editor incl. drag/drop (gated behind
+  `newScheduleEditTable`; needs the flag enabled in the build).
+- **Auth extras:** MFA login, password reset request/confirm, email
+  verification, expired-token → redirect behavior.
+- **Donations & incentives:** donation flow (PayPal mocked), incentives, bids
+  (gated by `donationsDisabled`).
+- **User:** availability, saved games, profile history, language switching.
 
 ---
 
 ## 7. Per-Step "Definition of Done"
 
 - New specs pass under `npm run e2e` across all configured browsers.
+- `npm run lint` and `npm run test:ci` still pass (the `e2e/` folder is not
+  linted by design — see §2.7 — so it won't affect lint).
 - No flaky tests (retries should not be needed locally).
 - All API calls are mocked — no real backend required.
 - Page objects used for any page accessed in more than one test file.
@@ -599,29 +829,65 @@ Each step is independently mergeable. Keep the suite green after every step.
 
 ## 9. Gotchas & Tips
 
-### Service Workers
-If this app registers a service worker, it may intercept routes before Playwright
-can. Disable with:
+### Time-dependent UI (freeze the clock)
+`timezoneId: 'UTC'` (§2.3) stabilizes *how* dates render, but some UI depends on
+the current *instant* — countdowns / "time until" displays and the `vis-timeline`
+schedule are computed relative to `now` (via the app's temporal service). For
+those tests, freeze the clock so the output is deterministic:
 ```typescript
-use: {
-  serviceWorkers: 'block',
-}
+await page.clock.install({ time: new Date('2026-09-01T12:00:00Z') });
+await page.goto('/marathon/abc123/schedule');
 ```
-Reference: https://playwright.dev/docs/network
+Note: the **homepage** does not need this — its next/open/live bucketing is
+decided by the server response, which you mock directly.
 
-### Angular route handling
-Angular's client-side router handles navigation after initial load. For tests
-that navigate via clicks (not `page.goto()`), wait for the target URL:
+Reference: https://playwright.dev/docs/clock
+
+### Feature flags
+Some behavior is gated by compile-time flags in `environment.ts` (the config
+`ng serve` uses). At time of writing: `donationsDisabled: false` and
+`newScheduleEditTable: false`. E2E tests run against these **compiled** values —
+they cannot be toggled at runtime via mocking. Write tests for the current flag
+state, and if you need to cover the opposite state, add a dedicated
+`environment.e2e.ts` (wired to an e2e build configuration) or temporarily flip the
+flag in a separate run. Don't write tests that assume a flag value the build
+doesn't actually produce.
+
+### Angular route handling & localized routes
+Angular's client-side router handles navigation after initial load. **Routes are
+localized** via `@oengusio/ngx-translate-router` (`LocalizeRouterModule`), configured
+with `defaultLangFunction: () => 'en-GB'` and `alwaysSetPrefix: false`. This means:
+- The **default** language (`en-GB`) is served **without** a URL prefix
+  (`/marathon/abc123`).
+- A **non-default** locale prefixes the path (e.g. `/fr/marathon/abc123`), which
+  would break URL assertions and change on-screen text.
+
+Because the active language is resolved from the browser locale / cached value,
+tests must pin it. The `locale: 'en-GB'` set in `playwright.config.ts` (§2.3)
+keeps URLs unprefixed and text English. If a test still picks up a cached
+language, also seed the cache before navigation:
+```typescript
+await context.addInitScript(() => {
+  window.localStorage.setItem('language', 'en-GB'); // LocalizeRouter cacheName
+});
+```
+
+For tests that navigate via clicks (not `page.goto()`), wait for the target URL:
 ```typescript
 await page.getByRole('link', { name: 'Schedule' }).click();
 await page.waitForURL('**/marathon/*/schedule');
 ```
 
 ### i18n in tests
-Translations are embedded into the application bundle (not loaded via HTTP at
-runtime), so no mocking of translation endpoints is needed. Tests can assert
-against English text directly. For elements where translation keys vary by
-locale, use `data-testid` attributes as a stable selector.
+Translations are **not** served from an API endpoint. `WebpackTranslateLoader`
+resolves each language via a dynamic `import('../assets/i18n/${lang}.json')`,
+which Angular bundles as a lazy-loaded JS chunk fetched over HTTP (same-origin,
+not `/api`) on demand. So there is no translation *API* to mock — but the chunk
+request is same-origin and served by the dev server, so it works offline in the
+container. The default/fallback language is `en-GB` (special-cased to `en.json`),
+so with the locale pinned (see above) tests can assert against English text
+directly. For elements where translated text is awkward to assert on, add a
+`data-testid` attribute as a stable selector.
 
 ### Debugging
 - `npx playwright test --debug` — step through tests with inspector

@@ -36,6 +36,9 @@ jobs:
       - name: lint code
         run: npm run lint
 
+      - name: run unit tests
+        run: npm run test:ci
+
   build_image:
     name: Build image
     runs-on: ubuntu-latest
